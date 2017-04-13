@@ -45,7 +45,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final String MusicDirectoryPath = "MusicDirectoryPath";
   private static final String DownloadsDirectoryPath = "DownloadsDirectoryPath";
 
-  private static final int RECORDER_SAMPLERATE = 16000;
+  private static final int RECORDER_SAMPLERATE = 44100;
   private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
   private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
   private static final String APP_NAME = "sendrecordings";
