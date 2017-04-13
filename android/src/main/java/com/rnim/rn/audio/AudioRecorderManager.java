@@ -14,14 +14,21 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.io.File;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import android.content.pm.PackageManager;
 import android.os.Environment;
+import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -42,10 +49,19 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final String MusicDirectoryPath = "MusicDirectoryPath";
   private static final String DownloadsDirectoryPath = "DownloadsDirectoryPath";
 
-  private Context context;
-  private MediaRecorder recorder;
-  private String currentOutputFile;
+  private static final int RECORDER_SAMPLERATE = 16000;
+  private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
+  private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+  private AudioRecord recorder = null;
+  private Thread recordingThread = null;
   private boolean isRecording = false;
+  int bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
+                RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
+  int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
+  int BytesPerElement = 2; // 2 bytes in 16bit format
+
+  private Context context;
+  private String currentOutputFile;
   private Timer timer;
   private int recorderSecondsElapsed;
 
@@ -81,82 +97,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     promise.resolve(permissionGranted);
   }
 
-  @ReactMethod
-  public void prepareRecordingAtPath(String recordingPath, ReadableMap recordingSettings, Promise promise) {
-    if (isRecording){
-      logAndRejectPromise(promise, "INVALID_STATE", "Please call stopRecording before starting recording");
-    }
 
-    recorder = new MediaRecorder();
-    try {
-      recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-      int outputFormat = getOutputFormatFromString(recordingSettings.getString("OutputFormat"));
-      recorder.setOutputFormat(outputFormat);
-      int audioEncoder = getAudioEncoderFromString(recordingSettings.getString("AudioEncoding"));
-      recorder.setAudioEncoder(audioEncoder);
-      recorder.setAudioSamplingRate(recordingSettings.getInt("SampleRate"));
-      recorder.setAudioChannels(recordingSettings.getInt("Channels"));
-      recorder.setAudioEncodingBitRate(recordingSettings.getInt("AudioEncodingBitRate"));
-      recorder.setOutputFile(recordingPath);
-    }
-    catch(final Exception e) {
-      logAndRejectPromise(promise, "COULDNT_CONFIGURE_MEDIA_RECORDER" , "Make sure you've added RECORD_AUDIO permission to your AndroidManifest.xml file "+e.getMessage());
-      return;
-    }
-
-    currentOutputFile = recordingPath;
-    try {
-      recorder.prepare();
-      promise.resolve(currentOutputFile);
-    } catch (final Exception e) {
-      logAndRejectPromise(promise, "COULDNT_PREPARE_RECORDING_AT_PATH "+recordingPath, e.getMessage());
-    }
-
-  }
-
-  private int getAudioEncoderFromString(String audioEncoder) {
-   switch (audioEncoder) {
-     case "aac":
-       return MediaRecorder.AudioEncoder.AAC;
-     case "aac_eld":
-       return MediaRecorder.AudioEncoder.AAC_ELD;
-     case "amr_nb":
-       return MediaRecorder.AudioEncoder.AMR_NB;
-     case "amr_wb":
-       return MediaRecorder.AudioEncoder.AMR_WB;
-     case "he_aac":
-       return MediaRecorder.AudioEncoder.HE_AAC;
-     case "vorbis":
-      return MediaRecorder.AudioEncoder.VORBIS;
-     default:
-       Log.d("INVALID_AUDIO_ENCODER", "USING MediaRecorder.AudioEncoder.DEFAULT instead of "+audioEncoder+": "+MediaRecorder.AudioEncoder.DEFAULT);
-       return MediaRecorder.AudioEncoder.DEFAULT;
-   }
-  }
-
-  private int getOutputFormatFromString(String outputFormat) {
-    switch (outputFormat) {
-      case "mpeg_4":
-        return MediaRecorder.OutputFormat.MPEG_4;
-      case "aac_adts":
-        return MediaRecorder.OutputFormat.AAC_ADTS;
-      case "amr_nb":
-        return MediaRecorder.OutputFormat.AMR_NB;
-      case "amr_wb":
-        return MediaRecorder.OutputFormat.AMR_WB;
-      case "three_gpp":
-        return MediaRecorder.OutputFormat.THREE_GPP;
-      case "webm":
-        return MediaRecorder.OutputFormat.WEBM;
-      default:
-        Log.d("INVALID_OUPUT_FORMAT", "USING MediaRecorder.OutputFormat.DEFAULT : "+MediaRecorder.OutputFormat.DEFAULT);
-        return MediaRecorder.OutputFormat.DEFAULT;
-
-    }
-  }
 
   @ReactMethod
   public void startRecording(Promise promise){
+    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                RECORDER_SAMPLERATE, RECORDER_CHANNELS,
+                RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
     if (recorder == null){
       logAndRejectPromise(promise, "RECORDING_NOT_PREPARED", "Please call prepareRecordingAtPath before starting recording");
       return;
@@ -165,11 +112,154 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call stopRecording before starting recording");
       return;
     }
-    recorder.start();
+    recorder.startRecording();
     isRecording = true;
+    recordingThread = new Thread(new Runnable() {
+        public void run() {
+            writeAudioDataToFile();
+        }
+    }, "AudioRecorder Thread");
+    recordingThread.start();
+
     startTimer();
     promise.resolve(currentOutputFile);
   }
+
+       //convert short to byte
+  private byte[] short2byte(short[] sData) {
+      int shortArrsize = sData.length;
+      byte[] bytes = new byte[shortArrsize * 2];
+      for (int i = 0; i < shortArrsize; i++) {
+          bytes[i * 2] = (byte) (sData[i] & 0x00FF);
+          bytes[(i * 2) + 1] = (byte) (sData[i] >> 8);
+          sData[i] = 0;
+      }
+      return bytes;
+
+  }
+
+  private void writeAudioDataToFile() {
+        // Write the output audio in byte
+
+        String filePath = "/data/data/com.sendrecordings/recording.pcm";
+        short sData[] = new short[BufferElements2Rec];
+
+        FileOutputStream os = null;
+        try {
+            os = new FileOutputStream(filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        while (isRecording) {
+            // gets the voice output from microphone to byte format
+
+            recorder.read(sData, 0, BufferElements2Rec);
+            System.out.println("Short wirting to file" + sData.toString());
+            try {
+                // // writes the data to file from buffer
+                // // stores the voice buffer
+                byte bData[] = short2byte(sData);
+                os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void rawToWave(final File rawFile, final File waveFile) throws IOException {
+
+      byte[] rawData = new byte[(int) rawFile.length()];
+      DataInputStream input = null;
+      try {
+          input = new DataInputStream(new FileInputStream(rawFile));
+          input.read(rawData);
+      } finally {
+          if (input != null) {
+              input.close();
+          }
+      }
+
+      DataOutputStream output = null;
+      try {
+          output = new DataOutputStream(new FileOutputStream(waveFile));
+          // WAVE header
+          // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+          writeString(output, "RIFF"); // chunk id
+          writeInt(output, 36 + rawData.length); // chunk size
+          writeString(output, "WAVE"); // format
+          writeString(output, "fmt "); // subchunk 1 id
+          writeInt(output, 16); // subchunk 1 size
+          writeShort(output, (short) 1); // audio format (1 = PCM)
+          writeShort(output, (short) 1); // number of channels
+          writeInt(output, RECORDER_SAMPLERATE); // sample rate
+          writeInt(output, RECORDER_SAMPLERATE * 2); // byte rate
+          writeShort(output, (short) 2); // block align
+          writeShort(output, (short) 16); // bits per sample
+          writeString(output, "data"); // subchunk 2 id
+          writeInt(output, rawData.length); // subchunk 2 size
+          // Audio data (conversion big endian -> little endian)
+          short[] shorts = new short[rawData.length / 2];
+          ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
+          ByteBuffer bytes = ByteBuffer.allocate(shorts.length * 2);
+          for (short s : shorts) {
+              bytes.putShort(s);
+          }
+
+          output.write(fullyReadFileToBytes(rawFile));
+      } finally {
+          if (output != null) {
+              output.close();
+          }
+      }
+  }
+
+    byte[] fullyReadFileToBytes(File f) throws IOException {
+      int size = (int) f.length();
+      byte bytes[] = new byte[size];
+      byte tmpBuff[] = new byte[size];
+      FileInputStream fis= new FileInputStream(f);
+      try { 
+
+          int read = fis.read(bytes, 0, size);
+          if (read < size) {
+              int remain = size - read;
+              while (remain > 0) {
+                  read = fis.read(tmpBuff, 0, remain);
+                  System.arraycopy(tmpBuff, 0, bytes, size - remain, read);
+                  remain -= read;
+              } 
+          } 
+      }  catch (IOException e){
+          throw e;
+      } finally { 
+          fis.close();
+      } 
+
+      return bytes;
+} 
+private void writeInt(final DataOutputStream output, final int value) throws IOException {
+    output.write(value >> 0);
+    output.write(value >> 8);
+    output.write(value >> 16);
+    output.write(value >> 24);
+}
+
+private void writeShort(final DataOutputStream output, final short value) throws IOException {
+    output.write(value >> 0);
+    output.write(value >> 8);
+}
+
+private void writeString(final DataOutputStream output, final String value) throws IOException {
+    for (int i = 0; i < value.length(); i++) {
+        output.write(value.charAt(i));
+    }
+}
 
   @ReactMethod
   public void stopRecording(Promise promise){
@@ -184,6 +274,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     try {
       recorder.stop();
       recorder.release();
+      recorder = null;
+      recordingThread = null;
     }
     catch (final RuntimeException e) {
       // https://developer.android.com/reference/android/media/MediaRecorder.html#stop()
@@ -192,6 +284,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }
     finally {
       recorder = null;
+    }
+    File f1 = new File("/data/data/com.sendrecordings/recording.pcm");
+    File f2 = new File("/data/data/com.sendrecordings/recording.wav");
+    try {
+      rawToWave(f1, f2);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
 
     promise.resolve(currentOutputFile);
