@@ -111,7 +111,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     isPreferredRate = false;
     try {
       Log.i(TAG, "Attempting preferred rate (16KHz)");
-      recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
                  PREFERRED_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
 
@@ -127,7 +127,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     // If we weren't able to initialize with our preferred rate, use the fallback rate.
     if (!isPreferredRate) {
       Log.i(TAG, "Using backup rate (44.1KHz)");
-      recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
                  BACKUP_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
     }
