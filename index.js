@@ -31,6 +31,7 @@ var AudioRecorder = {
   },
   checkAuthorizationStatus: AudioRecorderManager.checkAuthorizationStatus,
   requestAuthorization: AudioRecorderManager.requestAuthorization,
+  getIsPreferredRate: AudioRecorderManager.getIsPreferredRate,
   removeListeners: function() {
     if (this.progressSubscription) this.progressSubscription.remove();
     if (this.finishedSubscription) this.finishedSubscription.remove();

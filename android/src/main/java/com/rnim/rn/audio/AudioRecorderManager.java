@@ -45,7 +45,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final String MusicDirectoryPath = "MusicDirectoryPath";
   private static final String DownloadsDirectoryPath = "DownloadsDirectoryPath";
 
-  private static final int RECORDER_SAMPLERATE = 44100;
+  private static final int PREFERRED_RECORDER_SAMPLERATE = 16000;
+  private static final int BACKUP_RECORDER_SAMPLERATE = 44100;
   private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
   private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
   private static final String APP_NAME = "sendrecordings";
@@ -54,7 +55,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private Thread recordingThread = null;
   private boolean isRecording = false;
   
-  int bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
+  int bufferSize = AudioRecord.getMinBufferSize(BACKUP_RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
   int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
   int BytesPerElement = 2; // 2 bytes in 16bit format
@@ -62,6 +63,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private Context context;
   private Timer timer;
   private int recorderSecondsElapsed;
+  private boolean isPreferredRate;
 
 
   public AudioRecorderManager(ReactApplicationContext reactContext) {
@@ -96,12 +98,40 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
 
+  @ReactMethod
+  public void getIsPreferredRate(Promise promise) {
+    promise.resolve(isPreferredRate);
+  }
+
+
 
   @ReactMethod
   public void startRecording(Promise promise){
-    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-                RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+    
+    isPreferredRate = false;
+    try {
+      Log.i(TAG, "Attempting preferred rate (16KHz)");
+      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                 PREFERRED_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
+                 RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+
+      if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+        isPreferredRate = true;
+        Log.i(TAG, "Using preferred rate (16KHz)");
+      }
+    }
+    catch (IllegalArgumentException ex) {
+      // fall through
+    }
+
+    // If we weren't able to initialize with our preferred rate, use the fallback rate.
+    if (!isPreferredRate) {
+      Log.i(TAG, "Using backup rate (44.1KHz)");
+      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                 BACKUP_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
+                 RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+    }
+
     if (recorder == null){
       logAndRejectPromise(promise, "RECORDING_NOT_PREPARED", "Please call prepareRecordingAtPath before starting recording");
       return;
@@ -184,6 +214,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
       DataOutputStream output = null;
       try {
+          int sampleRate = isPreferredRate ? PREFERRED_RECORDER_SAMPLERATE : BACKUP_RECORDER_SAMPLERATE;
           output = new DataOutputStream(new FileOutputStream(waveFile));
           // WAVE header
           // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
@@ -194,8 +225,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           writeInt(output, 16); // subchunk 1 size
           writeShort(output, (short) 1); // audio format (1 = PCM)
           writeShort(output, (short) 1); // number of channels
-          writeInt(output, RECORDER_SAMPLERATE); // sample rate
-          writeInt(output, RECORDER_SAMPLERATE * 2); // byte rate
+          writeInt(output, sampleRate); // sample rate
+          writeInt(output, sampleRate * 2); // byte rate
           writeShort(output, (short) 2); // block align
           writeShort(output, (short) 16); // bits per sample
           writeString(output, "data"); // subchunk 2 id
