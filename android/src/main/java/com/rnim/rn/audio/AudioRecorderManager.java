@@ -110,14 +110,14 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     
     isPreferredRate = false;
     try {
-      Log.e(TAG, "Attempting preferred rate (16KHz)");
+      Log.i(TAG, "Attempting preferred rate (16KHz)");
       recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                  PREFERRED_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
 
       if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
         isPreferredRate = true;
-        Log.e(TAG, "Using preferred rate (16KHz)");
+        Log.i(TAG, "Using preferred rate (16KHz)");
       }
     }
     catch (IllegalArgumentException ex) {
@@ -126,7 +126,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
     // If we weren't able to initialize with our preferred rate, use the fallback rate.
     if (!isPreferredRate) {
-      Log.e(TAG, "Using backup rate (44.1KHz)");
+      Log.i(TAG, "Using backup rate (44.1KHz)");
       recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                  BACKUP_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
