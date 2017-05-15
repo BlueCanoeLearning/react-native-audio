@@ -49,8 +49,6 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final int BACKUP_RECORDER_SAMPLERATE = 44100;
   private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
   private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-  private static final String APP_NAME = "sendrecordings";
-  private static final String FILE_PATH = "/data/data/com." + APP_NAME;
   private AudioRecord recorder = null;
   private Thread recordingThread = null;
   private boolean isRecording = false;
@@ -60,6 +58,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
   int BytesPerElement = 2; // 2 bytes in 16bit format
 
+  private String currentFilePath;
   private Context context;
   private Timer timer;
   private int recorderSecondsElapsed;
@@ -106,7 +105,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
 
   @ReactMethod
-  public void startRecording(Promise promise){
+  public void startRecording(String filePath, Promise promise){
     
     isPreferredRate = false;
     try {
@@ -141,6 +140,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       return;
     }
     recorder.startRecording();
+    currentFilePath = filePath;
     isRecording = true;
     recordingThread = new Thread(new Runnable() {
         public void run() {
@@ -150,7 +150,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     recordingThread.start();
 
     startTimer();
-    promise.resolve(FILE_PATH + "/recording.pcm");
+    promise.resolve(currentFilePath + "/recording.pcm");
   }
 
        //convert short to byte
@@ -173,7 +173,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
         FileOutputStream os = null;
         try {
-            os = new FileOutputStream(FILE_PATH + "/recording.pcm");
+            os = new FileOutputStream(currentFilePath + "/recording.pcm");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -313,15 +313,15 @@ private void writeString(final DataOutputStream output, final String value) thro
     finally {
       recorder = null;
     }
-    File f1 = new File(FILE_PATH + "/recording.pcm");
-    File f2 = new File(FILE_PATH + "/recording.wav");
+    File f1 = new File(currentFilePath + "/recording.pcm");
+    File f2 = new File(currentFilePath + "/recording.wav");
     try {
       rawToWave(f1, f2);
     } catch (IOException e) {
       e.printStackTrace();
     }
 
-    promise.resolve(FILE_PATH + "/recording.wav");
+    promise.resolve(currentFilePath + "/recording.wav");
     sendEvent("recordingFinished", null);
   }
 
