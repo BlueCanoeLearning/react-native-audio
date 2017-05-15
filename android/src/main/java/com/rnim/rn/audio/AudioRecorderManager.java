@@ -34,6 +34,28 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.io.FileInputStream;
 
 class AudioRecorderManager extends ReactContextBaseJavaModule {
+  private class Settings {
+    public int sampleRate;
+    public int audioSource;
+
+    public Settings(int rate, int source) {
+      this.sampleRate = rate;
+      this.audioSource = source;
+    }
+  }
+
+  // We strongly prefer an input source with noise suppression. We
+  // always output a 16kHz audio stream, so if we don't have to do
+  // any re-sampling, that's best, otherwise 48kHz is easy, and
+  // 44100 is a last resort.
+  private Settings[] recordSettings = new Settings[] {
+    new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(16000, MediaRecorder.AudioSource.MIC),
+    new Settings(48000, MediaRecorder.AudioSource.MIC),
+    new Settings(44100, MediaRecorder.AudioSource.MIC)
+  };
 
   private static final String TAG = "ReactNativeAudio";
 
@@ -46,14 +68,14 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final String DownloadsDirectoryPath = "DownloadsDirectoryPath";
 
   private static final int PREFERRED_RECORDER_SAMPLERATE = 16000;
-  private static final int BACKUP_RECORDER_SAMPLERATE = 44100;
+  private static final int FASTEST_RECORDER_SAMPLERATE = 48000;
   private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
   private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
   private AudioRecord recorder = null;
   private Thread recordingThread = null;
   private boolean isRecording = false;
   
-  int bufferSize = AudioRecord.getMinBufferSize(BACKUP_RECORDER_SAMPLERATE,
+  int bufferSize = AudioRecord.getMinBufferSize(FASTEST_RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
   int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
   int BytesPerElement = 2; // 2 bytes in 16bit format
@@ -62,7 +84,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private Context context;
   private Timer timer;
   private int recorderSecondsElapsed;
-  private boolean isPreferredRate;
+  private int actualSampleRate;
 
 
   public AudioRecorderManager(ReactApplicationContext reactContext) {
@@ -96,39 +118,30 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     promise.resolve(permissionGranted);
   }
 
-
-  @ReactMethod
-  public void getIsPreferredRate(Promise promise) {
-    promise.resolve(isPreferredRate);
-  }
-
-
-
   @ReactMethod
   public void startRecording(String filePath, Promise promise){
     
-    isPreferredRate = false;
-    try {
-      Log.i(TAG, "Attempting preferred rate (16KHz)");
-      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                 PREFERRED_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-                 RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+    // Try all recording settings in order of preference
+    for (int i=0; i < recordSettings.length; i++) {
+      try {
+        String msg = String.format("Attempting to record with source %d at sample rate %d",
+          recordSettings[i].audioSource,
+          recordSettings[i].sampleRate);
+        Log.i(TAG, msg);
 
-      if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-        isPreferredRate = true;
-        Log.i(TAG, "Using preferred rate (16KHz)");
+        recorder = new AudioRecord(recordSettings[i].audioSource,
+                  recordSettings[i].sampleRate, RECORDER_CHANNELS,
+                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+
+        if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+          this.actualSampleRate = recordSettings[i].sampleRate;
+          Log.i(TAG, "Recording setup succeeded");
+          break;
+        }
       }
-    }
-    catch (IllegalArgumentException ex) {
-      // fall through
-    }
-
-    // If we weren't able to initialize with our preferred rate, use the fallback rate.
-    if (!isPreferredRate) {
-      Log.i(TAG, "Using backup rate (44.1KHz)");
-      recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                 BACKUP_RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-                 RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+      catch (IllegalArgumentException ex) {
+        // fall through and try next settings option
+      }
     }
 
     if (recorder == null){
@@ -214,7 +227,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
       DataOutputStream output = null;
       try {
-          int sampleRate = isPreferredRate ? PREFERRED_RECORDER_SAMPLERATE : BACKUP_RECORDER_SAMPLERATE;
+          int sampleRate = this.actualSampleRate;
           output = new DataOutputStream(new FileOutputStream(waveFile));
           // WAVE header
           // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
@@ -234,6 +247,9 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           // Audio data (conversion big endian -> little endian)
           short[] shorts = new short[rawData.length / 2];
           ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
+
+          // TODO: resample to 16kHz
+
           ByteBuffer bytes = ByteBuffer.allocate(shorts.length * 2);
           for (short s : shorts) {
               bytes.putShort(s);
