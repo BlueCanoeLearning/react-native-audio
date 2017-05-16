@@ -121,6 +121,10 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   @ReactMethod
   public void startRecording(String filePath, Promise promise){
     
+    if (filePath == null) {
+      filePath = "/sdcard";
+    }
+
     // Try all recording settings in order of preference
     for (int i=0; i < recordSettings.length; i++) {
       try {
