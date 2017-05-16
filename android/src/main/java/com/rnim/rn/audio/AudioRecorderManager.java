@@ -49,11 +49,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   // any re-sampling, that's best, otherwise 48kHz is easy, and
   // 44100 is a last resort.
   private Settings[] recordSettings = new Settings[] {
-    //new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    //new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    //new Settings(16000, MediaRecorder.AudioSource.MIC),
-    //new Settings(48000, MediaRecorder.AudioSource.MIC),
+    new Settings(16000, MediaRecorder.AudioSource.MIC),
+    new Settings(48000, MediaRecorder.AudioSource.MIC),
     new Settings(44100, MediaRecorder.AudioSource.MIC)
   };
 
@@ -85,7 +85,6 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private Timer timer;
   private int recorderSecondsElapsed;
   private int actualSampleRate;
-
 
   public AudioRecorderManager(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -184,142 +183,117 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   private void writeAudioDataToFile() {
-        // Write the output audio in byte
+    // Write the output audio in byte
 
-        short sData[] = new short[BufferElements2Rec];
+    short sData[] = new short[BufferElements2Rec];
 
-        FileOutputStream os = null;
+    FileOutputStream os = null;
+    try {
+        os = new FileOutputStream(currentFilePath + "/recording.pcm");
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+    while (isRecording) {
+        // gets the voice output from microphone to byte format
+
+        recorder.read(sData, 0, BufferElements2Rec);
         try {
-            os = new FileOutputStream(currentFilePath + "/recording.pcm");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        while (isRecording) {
-            // gets the voice output from microphone to byte format
-
-            recorder.read(sData, 0, BufferElements2Rec);
-            try {
-                // // writes the data to file from buffer
-                // // stores the voice buffer
-                byte bData[] = short2byte(sData);
-                os.write(bData, 0, BufferElements2Rec * BytesPerElement);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        try {
-            os.close();
+            // // writes the data to file from buffer
+            // // stores the voice buffer
+            byte bData[] = short2byte(sData);
+            os.write(bData, 0, BufferElements2Rec * BytesPerElement);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private void rawToWave(final File rawFile, final File waveFile) throws IOException {
-
-      byte[] rawData = new byte[(int) rawFile.length()];
-      DataInputStream input = null;
-      try {
-          input = new DataInputStream(new FileInputStream(rawFile));
-          input.read(rawData);
-      } finally {
-          if (input != null) {
-              input.close();
-          }
-      }
-
-      DataOutputStream output = null;
-      try {
-          // We always resample to this rate now.
-          final int sampleRate = 16000;
-
-          // Audio data (conversion big endian -> little endian)
-          // Prepare the (possibly resampled) output audio data
-          short[] shorts = new short[rawData.length / 2];
-          ByteBuffer
-            .wrap(rawData)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .asShortBuffer()
-            .get(shorts);
-
-          short[] resampledShorts = this.resampleTo16kHz(shorts);
-
-          ByteBuffer bytes = ByteBuffer
-            .allocate(resampledShorts.length * 2)
-            .order(ByteOrder.LITTLE_ENDIAN);
-
-          for (short s : resampledShorts) {
-              bytes.putShort(s);
-          }
-
-          int outputSize = bytes.capacity();
-
-          output = new DataOutputStream(new FileOutputStream(waveFile));
-          // WAVE header
-          // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
-          writeString(output, "RIFF"); // chunk id
-          writeInt(output, 36 + outputSize); // chunk size
-          writeString(output, "WAVE"); // format
-          writeString(output, "fmt "); // subchunk 1 id
-          writeInt(output, 16); // subchunk 1 size
-          writeShort(output, (short) 1); // audio format (1 = PCM)
-          writeShort(output, (short) 1); // number of channels
-          writeInt(output, sampleRate); // sample rate
-          writeInt(output, sampleRate * 2); // byte rate
-          writeShort(output, (short) 2); // block align
-          writeShort(output, (short) 16); // bits per sample
-          writeString(output, "data"); // subchunk 2 id
-          writeInt(output, outputSize); // subchunk 2 size
-
-          output.write(bytes.array());
-      } finally {
-          if (output != null) {
-              output.close();
-          }
-      }
+    try {
+        os.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
   }
 
-    byte[] fullyReadFileToBytes(File f) throws IOException {
-      int size = (int) f.length();
-      byte bytes[] = new byte[size];
-      byte tmpBuff[] = new byte[size];
-      FileInputStream fis= new FileInputStream(f);
-      try { 
+  private void rawToWave(final File rawFile, final File waveFile) throws IOException {
 
-          int read = fis.read(bytes, 0, size);
-          if (read < size) {
-              int remain = size - read;
-              while (remain > 0) {
-                  read = fis.read(tmpBuff, 0, remain);
-                  System.arraycopy(tmpBuff, 0, bytes, size - remain, read);
-                  remain -= read;
-              } 
-          } 
-      }  catch (IOException e){
-          throw e;
-      } finally { 
-          fis.close();
-      } 
+    byte[] rawData = new byte[(int) rawFile.length()];
+    DataInputStream input = null;
+    try {
+        input = new DataInputStream(new FileInputStream(rawFile));
+        input.read(rawData);
+    } finally {
+        if (input != null) {
+            input.close();
+        }
+    }
 
-      return bytes;
-} 
-private void writeInt(final DataOutputStream output, final int value) throws IOException {
+    DataOutputStream output = null;
+    try {
+        // Audio data (conversion big endian -> little endian)
+        short[] shorts = new short[rawData.length / 2];
+        ByteBuffer
+          .wrap(rawData)
+          .order(ByteOrder.LITTLE_ENDIAN)
+          .asShortBuffer()
+          .get(shorts);
+
+        // Prepare the (possibly resampled) output audio data
+        short[] resampledShorts = this.resampleTo16kHz(shorts);
+
+        ByteBuffer bytes = ByteBuffer
+          .allocate(resampledShorts.length * 2)
+          .order(ByteOrder.LITTLE_ENDIAN);
+
+        for (short s : resampledShorts) {
+            bytes.putShort(s);
+        }
+
+        // We always resample to this rate now.
+        final int sampleRate = 16000;
+        int outputSize = bytes.capacity();
+
+        output = new DataOutputStream(new FileOutputStream(waveFile));
+        // WAVE header
+        // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+        writeString(output, "RIFF"); // chunk id
+        writeInt(output, 36 + outputSize); // chunk size
+        writeString(output, "WAVE"); // format
+        writeString(output, "fmt "); // subchunk 1 id
+        writeInt(output, 16); // subchunk 1 size
+        writeShort(output, (short) 1); // audio format (1 = PCM)
+        writeShort(output, (short) 1); // number of channels
+        writeInt(output, sampleRate); // sample rate
+        writeInt(output, sampleRate * 2); // byte rate
+        writeShort(output, (short) 2); // block align
+        writeShort(output, (short) 16); // bits per sample
+        writeString(output, "data"); // subchunk 2 id
+        writeInt(output, outputSize); // subchunk 2 size
+
+        output.write(bytes.array());
+    } finally {
+        if (output != null) {
+            output.close();
+        }
+    }
+  }
+
+  private void writeInt(final DataOutputStream output, final int value) throws IOException {
     output.write(value >> 0);
     output.write(value >> 8);
     output.write(value >> 16);
     output.write(value >> 24);
-}
+  }
 
-private void writeShort(final DataOutputStream output, final short value) throws IOException {
+  private void writeShort(final DataOutputStream output, final short value) throws IOException {
     output.write(value >> 0);
     output.write(value >> 8);
-}
+  }
 
-private void writeString(final DataOutputStream output, final String value) throws IOException {
+  private void writeString(final DataOutputStream output, final String value) throws IOException {
     for (int i = 0; i < value.length(); i++) {
         output.write(value.charAt(i));
     }
-}
+  }
 
   @ReactMethod
   public void stopRecording(Promise promise){
