@@ -422,7 +422,7 @@ private void writeString(final DataOutputStream output, final String value) thro
 
   private double[] interpolate(short[] input) {
     long outputSamples = (input.length * 48000L) / 44100L;
-    double[] output = new double[outputSamples];
+    double[] output = new double[(int)outputSamples];
 
     final double inPeriod = 1.0 / 44100;
     final double outPeriod = 1.0 / 48000;
