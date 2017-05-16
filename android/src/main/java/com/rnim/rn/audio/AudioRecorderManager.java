@@ -199,7 +199,6 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
             // gets the voice output from microphone to byte format
 
             recorder.read(sData, 0, BufferElements2Rec);
-            System.out.println("Short wirting to file" + sData.toString());
             try {
                 // // writes the data to file from buffer
                 // // stores the voice buffer
