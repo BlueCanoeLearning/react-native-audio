@@ -406,12 +406,12 @@ private void writeString(final DataOutputStream output, final String value) thro
     return output;
   }
 
-  private float[] interpolate(short[] input) {
+  private double[] interpolate(short[] input) {
     int outputSamples = (input.length * 48000) / 44100;
-    float[] output = new float[outputSamples];
+    double[] output = new double[outputSamples];
 
-    final float inPeriod = 1.0 / 44100;
-    final float outPeriod = 1.0 / 48000;
+    final double inPeriod = 1.0 / 44100;
+    final double outPeriod = 1.0 / 48000;
 
     int inIndex = 0;
     int outIndex = 0;
@@ -429,13 +429,13 @@ private void writeString(final DataOutputStream output, final String value) thro
           inIndex = input.length - 2;
         }
 
-        float x0 = inIndex * inPeriod;
-        float y0 = input[inIndex];
-        float x1 = x0 + inPeriod;
-        float y1 = input[inIndex + 1];
+        double x0 = inIndex * inPeriod;
+        double y0 = input[inIndex];
+        double x1 = x0 + inPeriod;
+        double y1 = input[inIndex + 1];
 
-        float x = outIndex * outPeriod;
-        float y = y0 + (x - x0) * (y1 - y0)/(x1 - x0);
+        double x = outIndex * outPeriod;
+        double y = y0 + (x - x0) * (y1 - y0)/(x1 - x0);
 
         output[outIndex++] = y;
     }
@@ -443,8 +443,8 @@ private void writeString(final DataOutputStream output, final String value) thro
     return output;
   }
 
-  private short[] lowPassFilter(float[] input) {
-    final float[] c = new float[] {
+  private short[] lowPassFilter(double[] input) {
+    final double[] c = new double[] {
         -0.0117092317869676, 0.0308750527800459, -0.00738784532410977, -0.0127160802769717, -0.00507069946874753,
         0.00458778315123943, 0.00931287499494599, 0.00607122438794847, -0.00256089459687806, -0.00957308706102434,
         -0.00828980690747116, 0.00100506585230833, 0.0105568267498244, 0.0112252366103502, 0.00100794601937544,
@@ -467,20 +467,20 @@ private void writeString(final DataOutputStream output, final String value) thro
     int outIndex = 0;
 
     while (inIndex < input.length) {
-        float y = 0;
+        double y = 0;
         for (int i=0; i < c.length ;i++) {
             y += input[inIndex - i] * c[i];
         }
 
         inIndex++;
-        output[outIndex++] = Math.round(y);
+        output[outIndex++] = (short)Math.round(y);
     }
 
     return output;
   }
 
   private short[] downsample441to16(short[] input) {
-    float[] interpolated = this.interpolate(input);
+    double[] interpolated = this.interpolate(input);
     short[] filtered = this.lowPassFilter(interpolated);
     short[] output = this.downsampleByN(filtered, 3);
 
