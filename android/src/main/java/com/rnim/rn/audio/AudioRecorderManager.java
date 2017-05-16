@@ -50,10 +50,10 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   // 44100 is a last resort.
   private Settings[] recordSettings = new Settings[] {
     //new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    //new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     //new Settings(16000, MediaRecorder.AudioSource.MIC),
-    new Settings(48000, MediaRecorder.AudioSource.MIC),
+    //new Settings(48000, MediaRecorder.AudioSource.MIC),
     new Settings(44100, MediaRecorder.AudioSource.MIC)
   };
 
@@ -236,7 +236,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           // Audio data (conversion big endian -> little endian)
           // Prepare the (possibly resampled) output audio data
           short[] shorts = new short[rawData.length / 2];
-          ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
+          ByteBuffer
+            .wrap(rawData)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .asShortBuffer()
+            .get(shorts);
 
           short[] resampledShorts = this.resampleTo16kHz(shorts);
 
