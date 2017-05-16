@@ -49,10 +49,10 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   // any re-sampling, that's best, otherwise 48kHz is easy, and
   // 44100 is a last resort.
   private Settings[] recordSettings = new Settings[] {
-    new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    //new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    new Settings(16000, MediaRecorder.AudioSource.MIC),
+    //new Settings(16000, MediaRecorder.AudioSource.MIC),
     new Settings(48000, MediaRecorder.AudioSource.MIC),
     new Settings(44100, MediaRecorder.AudioSource.MIC)
   };
