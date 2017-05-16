@@ -233,23 +233,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           // We always resample to this rate now.
           final int sampleRate = 16000;
 
-          output = new DataOutputStream(new FileOutputStream(waveFile));
-          // WAVE header
-          // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
-          writeString(output, "RIFF"); // chunk id
-          writeInt(output, 36 + rawData.length); // chunk size
-          writeString(output, "WAVE"); // format
-          writeString(output, "fmt "); // subchunk 1 id
-          writeInt(output, 16); // subchunk 1 size
-          writeShort(output, (short) 1); // audio format (1 = PCM)
-          writeShort(output, (short) 1); // number of channels
-          writeInt(output, sampleRate); // sample rate
-          writeInt(output, sampleRate * 2); // byte rate
-          writeShort(output, (short) 2); // block align
-          writeShort(output, (short) 16); // bits per sample
-          writeString(output, "data"); // subchunk 2 id
-          writeInt(output, rawData.length); // subchunk 2 size
           // Audio data (conversion big endian -> little endian)
+          // Prepare the (possibly resampled) output audio data
           short[] shorts = new short[rawData.length / 2];
           ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
 
@@ -260,7 +245,26 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
               bytes.putShort(s);
           }
 
-          output.write(fullyReadFileToBytes(rawFile));
+          int outputSize = bytes.capacity();
+
+          output = new DataOutputStream(new FileOutputStream(waveFile));
+          // WAVE header
+          // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+          writeString(output, "RIFF"); // chunk id
+          writeInt(output, 36 + outputSize); // chunk size
+          writeString(output, "WAVE"); // format
+          writeString(output, "fmt "); // subchunk 1 id
+          writeInt(output, 16); // subchunk 1 size
+          writeShort(output, (short) 1); // audio format (1 = PCM)
+          writeShort(output, (short) 1); // number of channels
+          writeInt(output, sampleRate); // sample rate
+          writeInt(output, sampleRate * 2); // byte rate
+          writeShort(output, (short) 2); // block align
+          writeShort(output, (short) 16); // bits per sample
+          writeString(output, "data"); // subchunk 2 id
+          writeInt(output, outputSize); // subchunk 2 size
+
+          output.write(bytes.array());
       } finally {
           if (output != null) {
               output.close();
