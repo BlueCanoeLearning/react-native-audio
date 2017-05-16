@@ -227,7 +227,9 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
       DataOutputStream output = null;
       try {
-          int sampleRate = this.actualSampleRate;
+          // We always resample to this rate now.
+          final int sampleRate = 16000;
+
           output = new DataOutputStream(new FileOutputStream(waveFile));
           // WAVE header
           // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
@@ -248,10 +250,10 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           short[] shorts = new short[rawData.length / 2];
           ByteBuffer.wrap(rawData).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
 
-          // TODO: resample to 16kHz
+          short[] resampledShorts = this.resampleTo16kHz(shorts);
 
-          ByteBuffer bytes = ByteBuffer.allocate(shorts.length * 2);
-          for (short s : shorts) {
+          ByteBuffer bytes = ByteBuffer.allocate(resampledShorts.length * 2);
+          for (short s : resampledShorts) {
               bytes.putShort(s);
           }
 
@@ -381,4 +383,107 @@ private void writeString(final DataOutputStream output, final String value) thro
     promise.reject(errorCode, errorMessage);
   }
 
+  private short[] resampleTo16kHz(short[] input) {
+    switch (this.actualSampleRate) {
+      case 16000:
+      default:
+        return input;
+
+      case 48000:
+        return this.downsampleByN(input, 3);
+      
+      case 44100:
+        return this.downsample441to16(input);
+    }
+  }
+  private short[] downsampleByN(short[] input, int factor) {
+    short[] output = new short[input.length / factor];
+
+    for (int i=0; i < output.length; i++) {
+      output[i] = input[i * factor];
+    }
+
+    return output;
+  }
+
+  private float[] interpolate(short[] input) {
+    int outputSamples = (input.length * 48000) / 44100;
+    float[] output = new float[outputSamples];
+
+    final float inPeriod = 1.0 / 44100;
+    final float outPeriod = 1.0 / 48000;
+
+    int inIndex = 0;
+    int outIndex = 0;
+
+    while (inIndex < (input.length - 1) && outIndex < output.length) {
+
+        // increment inIndex only as needed to keep it directly adjacent to the current
+        // output point in time.
+        while (((inIndex + 1) * inPeriod) < (outIndex * outPeriod)) {
+            inIndex++;
+        }
+
+        // Just a precaution...
+        if (inIndex >= input.length - 1) {
+          inIndex = input.length - 2;
+        }
+
+        float x0 = inIndex * inPeriod;
+        float y0 = input[inIndex];
+        float x1 = x0 + inPeriod;
+        float y1 = input[inIndex + 1];
+
+        float x = outIndex * outPeriod;
+        float y = y0 + (x - x0) * (y1 - y0)/(x1 - x0);
+
+        output[outIndex++] = y;
+    }
+
+    return output;
+  }
+
+  private short[] lowPassFilter(float[] input) {
+    final float[] c = new float[] {
+        -0.0117092317869676, 0.0308750527800459, -0.00738784532410977, -0.0127160802769717, -0.00507069946874753,
+        0.00458778315123943, 0.00931287499494599, 0.00607122438794847, -0.00256089459687806, -0.00957308706102434,
+        -0.00828980690747116, 0.00100506585230833, 0.0105568267498244, 0.0112252366103502, 0.00100794601937544,
+        -0.0117450230972097, -0.0149937833567458, -0.00392357154067098, 0.0129539613312175, 0.0199789996574662,
+        0.00832583108612983, -0.0140627429055849, -0.0269921317748012, -0.0153663212767268, 0.0149976483390043,
+        0.0381120598515691, 0.0281192005901666, -0.0157090309990863, -0.0605272748412227, -0.0588464738424515,
+        0.0161533750132946, 0.144915996973263, 0.267004511178648, 0.317029472426119, 0.267004511178648,
+        0.144915996973263, 0.0161533750132946, -0.0588464738424515, -0.0605272748412227, -0.0157090309990863,
+        0.0281192005901666, 0.0381120598515691, 0.0149976483390043, -0.0153663212767268, -0.0269921317748012,
+        -0.0140627429055849, 0.00832583108612983, 0.0199789996574662, 0.0129539613312175, -0.00392357154067098,
+        -0.0149937833567458, -0.0117450230972097, 0.00100794601937544, 0.0112252366103502, 0.0105568267498244,
+        0.00100506585230833, -0.00828980690747116, -0.00957308706102434, -0.00256089459687806, 0.00607122438794847,
+        0.00931287499494599, 0.00458778315123943, -0.00507069946874753, -0.0127160802769717, -0.00738784532410977,
+        0.0308750527800459, -0.0117092317869676,
+    };
+
+    short[] output = new short[input.length - c.length];
+
+    int inIndex = c.length;
+    int outIndex = 0;
+
+    while (inIndex < input.length) {
+        float y = 0;
+        for (int i=0; i < c.length ;i++) {
+            y += input[inIndex - i] * c[i];
+        }
+
+        inIndex++;
+        output[outIndex++] = Math.round(y);
+    }
+
+    return output;
+  }
+
+  private short[] downsample441to16(short[] input) {
+    float[] interpolated = this.interpolate(input);
+    short[] filtered = this.lowPassFilter(interpolated);
+    short[] output = this.downsampleByN(filtered, 3);
+
+    return output;
+  }
 }
