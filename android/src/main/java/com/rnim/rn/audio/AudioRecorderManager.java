@@ -240,7 +240,10 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
           short[] resampledShorts = this.resampleTo16kHz(shorts);
 
-          ByteBuffer bytes = ByteBuffer.allocate(resampledShorts.length * 2);
+          ByteBuffer bytes = ByteBuffer
+            .allocate(resampledShorts.length * 2)
+            .order(ByteOrder.LITTLE_ENDIAN);
+
           for (short s : resampledShorts) {
               bytes.putShort(s);
           }
