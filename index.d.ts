@@ -10,14 +10,15 @@ declare module "react-native-audio" {
 
     export type AudioAuthorizationStatus = "granted" | "denied" | "undetermined";
 
-    export class AudioRecorder {
-        public startRecording: (fileName: string) => Promise<void>;
-        public stopRecording: () => Promise<void>;
-        public pauseRecording: () => Promise<void>;
-        public checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
-        public requestAuthorization: () => Promise<boolean>;
-        public removeListeners(): void;
+    export interface IAudioRecorder {
+        startRecording: (fileName: string) => Promise<void>;
+        stopRecording: () => Promise<void>;
+        pauseRecording: () => Promise<void>;
+        checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
+        requestAuthorization: () => Promise<boolean>;
+        removeListeners(): void;
     }
+    export const AudioRecorder: IAudioRecorder;
 
     interface IAudioUtils {
         MainBundlePath: string,
