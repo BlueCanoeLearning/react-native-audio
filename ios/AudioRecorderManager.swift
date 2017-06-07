@@ -103,10 +103,8 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             
             try self._setSessionActive(active: true)
             
-            //            DispatchQueue.main.async {
             audioRecorder.record()
             resolver(())
-            //            }
             
         } catch let error {
             let recordError: AudioError  = error as? AudioError ?? AudioError.record("Unknown error: \(error)")
@@ -135,7 +133,7 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             do {
                 try self._setSessionActive(active: false)
             } catch let error {
-                LogError("\(error)")
+                rejecter(nil,nil,error)
             }
         } else {
             rejecter(nil,nil,AudioError.stop("Could not stop recording, recording is not in progress."))
@@ -233,7 +231,7 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     /* if an error occurs while encoding it will be reported to the delegate. */
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?){
-        LogError("Audio recording encode error: \(String(describing: error))")
+        print("[ERROR] Audio recording encode error: \(String(describing: error))")
         //TODO:
     }
 }
