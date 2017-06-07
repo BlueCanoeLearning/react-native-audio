@@ -16,6 +16,7 @@ enum AudioError : CustomNSError {
     case permissions(String)
     case record(String)
     case stop(String)
+    case pause(String)
     case delegate(String)
     
     var errorUserInfo: [String : Any] {
@@ -26,6 +27,7 @@ enum AudioError : CustomNSError {
         case .permissions(let message):  description = "[AudioError.permissions] \(message)"
         case .record(let message):  description = "[AudioError.record] \(message)"
         case .stop(let message):  description = "[AudioError.stop] \(message)"
+        case .pause(let message): description = "[AudioError.pause] \(message)"
         case .delegate(let message):  description = "[AudioError.delegate] \(message)"
         }
         
@@ -125,6 +127,20 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         } else {
             rejecter(nil,nil,AudioError.stop("Could not stop recording, recording is not in progress."))
             self._onAudioStoppedCallback = nil
+        }
+    }
+    
+    @objc(pauseRecording:rejecter:)
+    func pauseRecording(resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+        guard let audioRecorder = self._audioRecorder else {
+            rejecter(nil,nil,AudioError.pause("Could not pause recording, no AVAudioRecorder."))
+            return
+        }
+        
+        if (self.recording) {
+            audioRecorder.pause()
+        } else {
+            rejecter(nil,nil,AudioError.pause("Could not pause recording, recording is not in progress."))
         }
     }
     
