@@ -29,6 +29,9 @@ var AudioRecorder = {
   stopRecording: function() {
     return AudioRecorderManager.stopRecording();
   },
+  isRecording: function() { 
+    return AudioRecorderManager.isRecording();
+  },
   checkAuthorizationStatus: AudioRecorderManager.checkAuthorizationStatus,
   requestAuthorization: AudioRecorderManager.requestAuthorization,
   removeListeners: function() {

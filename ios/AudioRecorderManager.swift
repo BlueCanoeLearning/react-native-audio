@@ -60,9 +60,23 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     fileprivate var _audioRecorder: AVAudioRecorder? = nil
     fileprivate var _onAudioStoppedCallback: ((_ success: Bool) -> Void)? = nil
     
+    //MARK: Overrides
+    
     static func moduleName() -> String! {
         return "AudioRecorder"
     }
+    
+    func constantsToExport() -> [String: Any] {
+        return [
+            "MainBundlePath": Bundle.main.bundlePath,
+            "NSCachesDirectoryPath": self.getPath(forDirectory: FileManager.SearchPathDirectory.cachesDirectory),
+            "NSDocumentDirectoryPath": self.getPath(forDirectory: FileManager.SearchPathDirectory.documentDirectory),
+            "NSLibraryDirectoryPath": self.getPath(forDirectory: FileManager.SearchPathDirectory.libraryDirectory),
+            
+        ]
+    }
+    
+    //MARK: JS Exported Methods
     
     @objc(startRecording:resolver:rejecter:)
     func startRecording(filename: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
@@ -115,7 +129,6 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
                     rejecter(nil, nil, AudioError.delegate("Recording did not finish successfully"))
                 }
             }
-            
             
             audioRecorder.stop()
             
@@ -204,7 +217,12 @@ class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         return audioRecorder!
     }
     
-    //MARK: AVAudioRecorderDelegate
+    fileprivate func getPath(forDirectory directory: FileManager.SearchPathDirectory) -> String {
+        let url = try! FileManager.default.url(for: directory, in: FileManager.SearchPathDomainMask.userDomainMask, appropriateFor: nil, create: true)
+        return url.absoluteString
+    }
+    
+    //MARK: - AVAudioRecorderDelegate
     
     /* audioRecorderDidFinishRecording:successfully: is called when a recording has been finished or stopped. This method is NOT called if the recorder is stopped due to an interruption. */
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
