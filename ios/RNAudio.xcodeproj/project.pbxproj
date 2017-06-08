@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		03AA340A1EE74EC000946913 /* RNAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		03AA340E1EE74EC700946913 /* AudioRecorderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */; };
+		03E7577F1EE9F437007478FD /* NativeTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FF1EE74E1700946913 /* NativeTransport.m */; };
+		03E757801EE9F43D007478FD /* RNAudio-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -66,6 +68,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03E757801EE9F43D007478FD /* RNAudio-Bridging-Header.h in Headers */,
 				03AA340A1EE74EC000946913 /* RNAudio.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,6 +142,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03E7577F1EE9F437007478FD /* NativeTransport.m in Sources */,
 				03AA340E1EE74EC700946913 /* AudioRecorderManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
