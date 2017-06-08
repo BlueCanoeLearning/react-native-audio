@@ -43,8 +43,8 @@ enum AudioError : CustomNSError {
     }
 }
 
-@objc(AudioRecordManager)
-class AudioRecordManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
+@objc(AudioRecorderManager)
+class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate let _audioRecordSettings: [String: Any] = [
         AVFormatIDKey: NSNumber(value: Int32(kAudioFormatLinearPCM)),

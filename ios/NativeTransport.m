@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <React/RCTBridgeModule.h>
 
-@interface RCT_EXTERN_MODULE(AudioRecordManager, NSObject)
+@interface RCT_EXTERN_MODULE(AudioRecorderManager, NSObject)
 
 RCT_EXTERN_METHOD(startRecording:(NSString*)fileName resolver:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
 RCT_EXTERN_METHOD(stopRecording:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
