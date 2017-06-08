@@ -16,10 +16,8 @@
 		03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorderManager.swift; sourceTree = "<group>"; };
 		03AA33FF1EE74E1700946913 /* NativeTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeTransport.m; sourceTree = "<group>"; };
 		03AA34061EE74EC000946913 /* RNAudio.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = RNAudio.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		03AA34081EE74EC000946913 /* RNAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RNAudio.h; sourceTree = "<group>"; };
-		03AA34091EE74EC000946913 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		429D45761CFC96E100CBD51A /* AudioRecorderManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioRecorderManager.m; sourceTree = SOURCE_ROOT; };
-		429D45771CFC96E100CBD51A /* AudioRecorderManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioRecorderManager.h; sourceTree = SOURCE_ROOT; };
+		03AA34081EE74EC000946913 /* RNAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RNAudio.h; path = RNAudio/RNAudio.h; sourceTree = "<group>"; };
+		03AA34091EE74EC000946913 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = RNAudio/Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,29 +34,19 @@
 		03AA33FE1EE74D6300946913 /* RNAudio */ = {
 			isa = PBXGroup;
 			children = (
-				429D45761CFC96E100CBD51A /* AudioRecorderManager.m */,
 				03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */,
-				429D45771CFC96E100CBD51A /* AudioRecorderManager.h */,
 				03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */,
+				03AA34081EE74EC000946913 /* RNAudio.h */,
+				03AA34091EE74EC000946913 /* Info.plist */,
 				03AA33FF1EE74E1700946913 /* NativeTransport.m */,
 			);
 			name = RNAudio;
-			sourceTree = "<group>";
-		};
-		03AA34071EE74EC000946913 /* RNAudio */ = {
-			isa = PBXGroup;
-			children = (
-				03AA34081EE74EC000946913 /* RNAudio.h */,
-				03AA34091EE74EC000946913 /* Info.plist */,
-			);
-			path = RNAudio;
 			sourceTree = "<group>";
 		};
 		42F559B11CFC90C400DC3F84 = {
 			isa = PBXGroup;
 			children = (
 				03AA33FE1EE74D6300946913 /* RNAudio */,
-				03AA34071EE74EC000946913 /* RNAudio */,
 				42F559BB1CFC90C400DC3F84 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -309,6 +297,7 @@
 				03AA340D1EE74EC000946913 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		42F559B51CFC90C400DC3F84 /* Build configuration list for PBXProject "RNAudio" */ = {
 			isa = XCConfigurationList;

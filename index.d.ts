@@ -14,6 +14,7 @@ declare module "react-native-audio" {
         startRecording: (fileName: string) => Promise<void>;
         stopRecording: () => Promise<void>;
         pauseRecording: () => Promise<void>;
+        isRecording: () => Promise<boolean>;
         checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
         requestAuthorization: () => Promise<boolean>;
         removeListeners(): void;
