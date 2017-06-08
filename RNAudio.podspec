@@ -12,12 +12,12 @@ Pod::Spec.new do |s|
   s.source              = { :git => package['repository']['url'], :tag => "v#{s.version}" }
   s.default_subspec     = 'Core'
   s.requires_arc        = true
-  s.platform            = :ios, "8.0"
+  s.platform            = :ios, "9.0"
   
   s.dependency 'React/Core'
   
   s.subspec 'Core' do |ss|
-    ss.source_files     = "ios/*.{h,m}"
+    ss.source_files     = "ios/*.{h,m,swift}"
   end
 
 end
