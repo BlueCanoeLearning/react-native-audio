@@ -8,7 +8,7 @@ declare module "react-native-audio" {
         Platform
     } from "react-native";
 
-    export type AudioAuthorizationStatus = "granted" | "denied" | "undetermined";
+    export type AudioAuthorizationStatus = "granted" | "denied" | "undetermined" | true | false;
 
     export interface IAudioRecorder {
         startRecording: (fileName: string) => Promise<void>;
