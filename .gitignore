@@ -35,3 +35,4 @@ android/gradlew
 android/gradlew.bat
 .idea
 .vscode
+local.properties
