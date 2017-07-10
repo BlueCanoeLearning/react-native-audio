@@ -9,7 +9,6 @@ import com.facebook.react.bridge.ReactMethod;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
@@ -25,8 +24,6 @@ import android.os.Environment;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -50,8 +47,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   // 44100 is a last resort.
   private Settings[] recordSettings = new Settings[] {
     new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-    new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+      new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+      new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(16000, MediaRecorder.AudioSource.MIC),
     new Settings(48000, MediaRecorder.AudioSource.MIC),
     new Settings(44100, MediaRecorder.AudioSource.MIC)
@@ -74,7 +71,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private AudioRecord recorder = null;
   private Thread recordingThread = null;
   private boolean isRecording = false;
-  
+
   int bufferSize = AudioRecord.getMinBufferSize(FASTEST_RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
   int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
@@ -118,23 +115,23 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void startRecording(String filePath, Promise promise){
-    
+  public void startRecording(String filePath, Promise promise) {
+
     if (filePath == null) {
       filePath = "/sdcard";
     }
 
     // Try all recording settings in order of preference
-    for (int i=0; i < recordSettings.length; i++) {
+    for (int i = 0; i < recordSettings.length; i++) {
       try {
         String msg = String.format("Attempting to record with source %d at sample rate %d",
           recordSettings[i].audioSource,
           recordSettings[i].sampleRate);
         Log.i(TAG, msg);
 
-        recorder = new AudioRecord(recordSettings[i].audioSource,
-                  recordSettings[i].sampleRate, RECORDER_CHANNELS,
-                  RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+        recorder = new AudioRecord(recordSettings[i].audioSource, 
+                                   recordSettings[i].sampleRate, RECORDER_CHANNELS,
+            RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
 
         if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
           this.actualSampleRate = recordSettings[i].sampleRate;
@@ -147,11 +144,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       }
     }
 
-    if (recorder == null){
+    if (recorder == null) {
       logAndRejectPromise(promise, "RECORDING_NOT_PREPARED", "Please call prepareRecordingAtPath before starting recording");
       return;
     }
-    if (isRecording){
+    if (isRecording) {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call stopRecording before starting recording");
       return;
     }
@@ -159,26 +156,26 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     currentFilePath = filePath;
     isRecording = true;
     recordingThread = new Thread(new Runnable() {
-        public void run() {
-            writeAudioDataToFile();
-        }
+      public void run() {
+        writeAudioDataToFile();
+      }
     }, "AudioRecorder Thread");
     recordingThread.start();
 
     startTimer();
-    promise.resolve(currentFilePath + "/recording.pcm");
+    promise.resolve(currentFilePath + ".pcm");
   }
 
-       //convert short to byte
+  //convert short to byte
   private byte[] short2byte(short[] sData) {
-      int shortArrsize = sData.length;
-      byte[] bytes = new byte[shortArrsize * 2];
-      for (int i = 0; i < shortArrsize; i++) {
-          bytes[i * 2] = (byte) (sData[i] & 0x00FF);
-          bytes[(i * 2) + 1] = (byte) (sData[i] >> 8);
-          sData[i] = 0;
-      }
-      return bytes;
+    int shortArrsize = sData.length;
+    byte[] bytes = new byte[shortArrsize * 2];
+    for (int i = 0; i < shortArrsize; i++) {
+      bytes[i * 2] = (byte) (sData[i] & 0x00FF);
+      bytes[(i * 2) + 1] = (byte) (sData[i] >> 8);
+      sData[i] = 0;
+    }
+    return bytes;
 
   }
 
@@ -187,30 +184,34 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
     short sData[] = new short[BufferElements2Rec];
 
+    File file = getRawFile(currentFilePath);
+    // Log.v(TAG, "Will write to " + file.getAbsolutePath());
+
     FileOutputStream os = null;
     try {
-        os = new FileOutputStream(currentFilePath + "/recording.pcm");
+      os = new FileOutputStream(file);
     } catch (IOException e) {
-        e.printStackTrace();
+      Log.e(TAG, "Could not write file to path" + currentFilePath);
+      e.printStackTrace();
     }
 
     while (isRecording) {
-        // gets the voice output from microphone to byte format
+      // gets the voice output from microphone to byte format
 
-        recorder.read(sData, 0, BufferElements2Rec);
-        try {
-            // // writes the data to file from buffer
-            // // stores the voice buffer
-            byte bData[] = short2byte(sData);
-            os.write(bData, 0, BufferElements2Rec * BytesPerElement);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+      recorder.read(sData, 0, BufferElements2Rec);
+      try {
+        // // writes the data to file from buffer
+        // // stores the voice buffer
+        byte bData[] = short2byte(sData);
+        os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
     try {
-        os.close();
+      os.close();
     } catch (IOException e) {
-        e.printStackTrace();
+      e.printStackTrace();
     }
   }
 
@@ -219,61 +220,61 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     byte[] rawData = new byte[(int) rawFile.length()];
     DataInputStream input = null;
     try {
-        input = new DataInputStream(new FileInputStream(rawFile));
-        input.read(rawData);
+      input = new DataInputStream(new FileInputStream(rawFile));
+      input.read(rawData);
     } finally {
-        if (input != null) {
-            input.close();
-        }
+      if (input != null) {
+        input.close();
+      }
     }
 
     DataOutputStream output = null;
     try {
-        // Audio data (conversion big endian -> little endian)
-        short[] shorts = new short[rawData.length / 2];
+      // Audio data (conversion big endian -> little endian)
+      short[] shorts = new short[rawData.length / 2];
         ByteBuffer
           .wrap(rawData)
           .order(ByteOrder.LITTLE_ENDIAN)
           .asShortBuffer()
           .get(shorts);
 
-        // Prepare the (possibly resampled) output audio data
-        short[] resampledShorts = this.resampleTo16kHz(shorts);
+      // Prepare the (possibly resampled) output audio data
+      short[] resampledShorts = this.resampleTo16kHz(shorts);
 
         ByteBuffer bytes = ByteBuffer
           .allocate(resampledShorts.length * 2)
           .order(ByteOrder.LITTLE_ENDIAN);
 
-        for (short s : resampledShorts) {
-            bytes.putShort(s);
-        }
+      for (short s : resampledShorts) {
+        bytes.putShort(s);
+      }
 
-        // We always resample to this rate now.
-        final int sampleRate = 16000;
-        int outputSize = bytes.capacity();
+      // We always resample to this rate now.
+      final int sampleRate = 16000;
+      int outputSize = bytes.capacity();
 
-        output = new DataOutputStream(new FileOutputStream(waveFile));
-        // WAVE header
-        // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
-        writeString(output, "RIFF"); // chunk id
-        writeInt(output, 36 + outputSize); // chunk size
-        writeString(output, "WAVE"); // format
-        writeString(output, "fmt "); // subchunk 1 id
-        writeInt(output, 16); // subchunk 1 size
-        writeShort(output, (short) 1); // audio format (1 = PCM)
-        writeShort(output, (short) 1); // number of channels
-        writeInt(output, sampleRate); // sample rate
-        writeInt(output, sampleRate * 2); // byte rate
-        writeShort(output, (short) 2); // block align
-        writeShort(output, (short) 16); // bits per sample
-        writeString(output, "data"); // subchunk 2 id
-        writeInt(output, outputSize); // subchunk 2 size
+      output = new DataOutputStream(new FileOutputStream(waveFile));
+      // WAVE header
+      // see http://ccrma.stanford.edu/courses/422/projects/WaveFormat/
+      writeString(output, "RIFF"); // chunk id
+      writeInt(output, 36 + outputSize); // chunk size
+      writeString(output, "WAVE"); // format
+      writeString(output, "fmt "); // subchunk 1 id
+      writeInt(output, 16); // subchunk 1 size
+      writeShort(output, (short) 1); // audio format (1 = PCM)
+      writeShort(output, (short) 1); // number of channels
+      writeInt(output, sampleRate); // sample rate
+      writeInt(output, sampleRate * 2); // byte rate
+      writeShort(output, (short) 2); // block align
+      writeShort(output, (short) 16); // bits per sample
+      writeString(output, "data"); // subchunk 2 id
+      writeInt(output, outputSize); // subchunk 2 size
 
-        output.write(bytes.array());
+      output.write(bytes.array());
     } finally {
-        if (output != null) {
-            output.close();
-        }
+      if (output != null) {
+        output.close();
+      }
     }
   }
 
@@ -291,13 +292,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   private void writeString(final DataOutputStream output, final String value) throws IOException {
     for (int i = 0; i < value.length(); i++) {
-        output.write(value.charAt(i));
+      output.write(value.charAt(i));
     }
   }
 
   @ReactMethod
-  public void stopRecording(Promise promise){
-    if (!isRecording){
+  public void stopRecording(Promise promise) {
+    if (!isRecording) {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call startRecording before stopping recording");
       return;
     }
@@ -309,35 +310,36 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       recorder.stop();
       recorder.release();
       recorder = null;
-      recordingThread = null;
-    }
-    catch (final RuntimeException e) {
+      recordingThread.join(); // wait for recordingThread to finish saving the file
+    } catch (final RuntimeException e) {
       // https://developer.android.com/reference/android/media/MediaRecorder.html#stop()
       logAndRejectPromise(promise, "RUNTIME_EXCEPTION", "No valid audio data received. You may be using a device that can't record audio.");
       return;
-    }
-    finally {
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
       recorder = null;
+      recordingThread = null;
     }
-    File f1 = new File(currentFilePath + "/recording.pcm");
-    File f2 = new File(currentFilePath + "/recording.wav");
+    File f1 = getRawFile(currentFilePath);
+    File f2 = getWavFile(currentFilePath);
     try {
       rawToWave(f1, f2);
     } catch (IOException e) {
       e.printStackTrace();
     }
 
-    promise.resolve(currentFilePath + "/recording.wav");
+    promise.resolve(f2.getAbsolutePath());
     sendEvent("recordingFinished", null);
   }
 
   @ReactMethod
-  public void pauseRecording(Promise promise){
+  public void pauseRecording(Promise promise) {
     // Added this function to have the same api for android and iOS, stops recording now
     stopRecording(promise);
   }
 
-  private void startTimer(){
+  private void startTimer() {
     stopTimer();
     timer = new Timer();
     timer.scheduleAtFixedRate(new TimerTask() {
@@ -351,7 +353,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }, 0, 1000);
   }
 
-  private void stopTimer(){
+  private void stopTimer() {
     recorderSecondsElapsed = 0;
     if (timer != null) {
       timer.cancel();
@@ -359,7 +361,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       timer = null;
     }
   }
-  
+
   private void sendEvent(String eventName, Object params) {
     getReactApplicationContext()
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
@@ -373,21 +375,21 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   private short[] resampleTo16kHz(short[] input) {
     switch (this.actualSampleRate) {
-      case 16000:
-      default:
-        return input;
+    case 16000:
+    default:
+      return input;
 
-      case 48000:
-        return this.downsampleByN(input, 3);
-      
-      case 44100:
-        return this.downsample441to16(input);
+    case 48000:
+      return this.downsampleByN(input, 3);
+
+    case 44100:
+      return this.downsample441to16(input);
     }
   }
   private short[] downsampleByN(short[] input, int factor) {
     short[] output = new short[input.length / factor];
 
-    for (int i=0; i < output.length; i++) {
+    for (int i = 0; i < output.length; i++) {
       output[i] = input[i * factor];
     }
 
@@ -396,7 +398,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   private double[] interpolate(short[] input) {
     long outputSamples = (input.length * 48000L) / 44100L;
-    double[] output = new double[(int)outputSamples];
+    double[] output = new double[(int) outputSamples];
 
     final double inPeriod = 1.0 / 44100;
     final double outPeriod = 1.0 / 48000;
@@ -406,26 +408,26 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
     while (inIndex < (input.length - 1) && outIndex < output.length) {
 
-        // increment inIndex only as needed to keep it directly adjacent to the current
-        // output point in time.
-        while (((inIndex + 1) * inPeriod) < (outIndex * outPeriod)) {
-            inIndex++;
-        }
+      // increment inIndex only as needed to keep it directly adjacent to the current
+      // output point in time.
+      while (((inIndex + 1) * inPeriod) < (outIndex * outPeriod)) {
+        inIndex++;
+      }
 
-        // Just a precaution...
-        if (inIndex >= input.length - 1) {
-          inIndex = input.length - 2;
-        }
+      // Just a precaution...
+      if (inIndex >= input.length - 1) {
+        inIndex = input.length - 2;
+      }
 
-        double x0 = inIndex * inPeriod;
-        double y0 = input[inIndex];
-        double x1 = x0 + inPeriod;
-        double y1 = input[inIndex + 1];
+      double x0 = inIndex * inPeriod;
+      double y0 = input[inIndex];
+      double x1 = x0 + inPeriod;
+      double y1 = input[inIndex + 1];
 
-        double x = outIndex * outPeriod;
-        double y = y0 + (x - x0) * (y1 - y0)/(x1 - x0);
+      double x = outIndex * outPeriod;
+      double y = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 
-        output[outIndex++] = y;
+      output[outIndex++] = y;
     }
 
     return output;
@@ -455,13 +457,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     int outIndex = 0;
 
     while (inIndex < input.length) {
-        double y = 0;
-        for (int i=0; i < c.length ;i++) {
-            y += input[inIndex - i] * c[i];
-        }
+      double y = 0;
+      for (int i = 0; i < c.length; i++) {
+        y += input[inIndex - i] * c[i];
+      }
 
-        inIndex++;
-        output[outIndex++] = (short)Math.round(y);
+      inIndex++;
+      output[outIndex++] = (short) Math.round(y);
     }
 
     return output;
@@ -473,5 +475,25 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     short[] output = this.downsampleByN(filtered, 3);
 
     return output;
+  }
+
+  private File getStorageDirectory() {
+    // Get the directory for the user's public pictures directory.
+    // FIXME: Needs to work on Api Level 16
+    File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "BlueCanoe");
+    if (!file.exists() && !file.mkdir()) {
+      Log.e(TAG, "Directory not created");
+    }
+    return file;
+  }
+
+  private File getRawFile(String fileName) {
+    File filePath = getStorageDirectory();
+    return new File(filePath, fileName + ".pcm");
+  }
+
+  private File getWavFile(String fileName) {
+    File filePath = getStorageDirectory();
+    return new File(filePath, fileName);
   }
 }
