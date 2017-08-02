@@ -104,7 +104,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             try self._setSessionActive(active: true)
             
             audioRecorder.record()
-            resolver(())
+            resolver(nil)
             
         } catch let error {
             let recordError: AudioError  = error as? AudioError ?? AudioError.record("Unknown error: \(error)")
@@ -120,9 +120,10 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         }
         
         if (self.recording) {
+            self._onAudioStoppedCallback?(false);
             self._onAudioStoppedCallback = { success in
                 if success {
-                    resolver(())
+                    resolver(nil)
                 } else {
                     rejecter(nil, nil, AudioError.delegate("Recording did not finish successfully"))
                 }
@@ -136,7 +137,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
                 rejecter(nil,nil,error)
             }
         } else {
-            rejecter(nil,nil,AudioError.stop("Could not stop recording, recording is not in progress."))
+            resolver(nil)
             self._onAudioStoppedCallback = nil
         }
     }
