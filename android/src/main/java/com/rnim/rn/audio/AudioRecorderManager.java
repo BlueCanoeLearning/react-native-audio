@@ -480,7 +480,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private File getStorageDirectory() {
     // Get the directory for the user's public pictures directory.
     // FIXME: Needs to work on Api Level 16
-    File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "BlueCanoe");
+    File file = new File(this.getReactApplicationContext().getFilesDir().getAbsolutePath());
     if (!file.exists() && !file.mkdir()) {
       Log.e(TAG, "Directory not created");
     }
