@@ -94,7 +94,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         let fileUrl = documentsPath.appendingPathComponent(filename)
         
         do {
-            try _audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: .mixWithOthers)
+            let options: AVAudioSessionCategoryOptions = [.defaultToSpeaker, .mixWithOthers]
+            try _audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: options)
             
             let audioRecorder = try self._createRecorder(fileUrl: fileUrl)
             audioRecorder.prepareToRecord()
