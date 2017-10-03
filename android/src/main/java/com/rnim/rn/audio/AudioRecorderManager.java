@@ -1,5 +1,6 @@
 package com.rnim.rn.audio;
 
+import android.app.Activity;
 import android.Manifest;
 import android.content.Context;
 
@@ -24,6 +25,7 @@ import android.os.Environment;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.AudioFormat;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -47,8 +49,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   // 44100 is a last resort.
   private Settings[] recordSettings = new Settings[] {
     new Settings(16000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-      new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
-      new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(48000, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+    new Settings(44100, MediaRecorder.AudioSource.VOICE_RECOGNITION),
     new Settings(16000, MediaRecorder.AudioSource.MIC),
     new Settings(48000, MediaRecorder.AudioSource.MIC),
     new Settings(44100, MediaRecorder.AudioSource.MIC)
@@ -68,6 +70,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private static final int FASTEST_RECORDER_SAMPLERATE = 48000;
   private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
   private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+
+  // For requesting microphone permission
+  private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 12345;
+  private static Promise requestPromise;
+
   private AudioRecord recorder = null;
   private Thread recordingThread = null;
   private boolean isRecording = false;
@@ -108,10 +115,50 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void checkAuthorizationStatus(Promise promise) {
-    int permissionCheck = ContextCompat.checkSelfPermission(getCurrentActivity(),
-            Manifest.permission.RECORD_AUDIO);
+    int permissionCheck = ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.RECORD_AUDIO);
     boolean permissionGranted = permissionCheck == PackageManager.PERMISSION_GRANTED;
     promise.resolve(permissionGranted);
+  }
+
+  @ReactMethod
+  public void requestAuthorization(Promise promise) {
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      promise.reject("E_ACTIVITY_DOES_NOT_EXIST", "Activity doesn't exist");
+      return;
+    }
+
+    // See if we already have permission - if so, return immediately.
+    int permissionCheck = ContextCompat.checkSelfPermission(currentActivity, Manifest.permission.RECORD_AUDIO);
+    boolean permissionGranted = permissionCheck == PackageManager.PERMISSION_GRANTED;
+    if (permissionGranted) {
+      promise.resolve(true);
+      return;
+    }
+
+    // We'll resolve this in the callback
+    requestPromise = promise;
+
+    ActivityCompat.requestPermissions(
+      currentActivity,
+      new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+      MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+  }
+
+  public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    if (requestCode == MY_PERMISSIONS_REQUEST_RECORD_AUDIO)
+    {
+      if (permissions.length == 0) {
+        Log.i(TAG, "RNAudio: onRequestPermissionsResult : cancelled!");
+        requestPromise.reject("E_ACTIVITY_CANCELLED", "User cancelled the permission request");
+        return;
+      }
+
+      // Did we get all requested permissions?
+      requestPromise.resolve(permissions.length == 2 &&
+          grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+          grantResults[1] == PackageManager.PERMISSION_GRANTED);
+    }
   }
 
   @ReactMethod
