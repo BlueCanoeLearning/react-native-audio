@@ -45,4 +45,8 @@ public class ReactNativeAudioPackage implements ReactPackage {
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         return Collections.emptyList();
     }
+
+    public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        AudioRecorderManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 }
