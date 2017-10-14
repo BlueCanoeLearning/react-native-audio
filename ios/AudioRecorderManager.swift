@@ -76,6 +76,28 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         ]
     }
     
+    override init() {
+        super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(self.audioSessionInterrupted), name: NSNotification.Name.AVAudioSessionInterruption, object: nil)
+        let options: AVAudioSessionCategoryOptions = [.defaultToSpeaker, .mixWithOthers]
+        do {
+            try _audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: options)
+            try self._setSessionActive(active: true)
+            print("Audio Recording Session is active")
+        } catch let error {
+            print("[ERROR] Audio recording encode error: \(String(describing: error))")
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        do {
+            try self._setSessionActive(active: false)
+        } catch let error {
+            print("[ERROR] Audio recording encode error: \(String(describing: error))")
+        }
+    }
+    
     //MARK: JS Exported Methods
     
     @objc(startRecording:resolver:rejecter:)
@@ -94,8 +116,6 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         let fileUrl = documentsPath.appendingPathComponent(filename)
         
         do {
-            let options: AVAudioSessionCategoryOptions = [.defaultToSpeaker, .mixWithOthers]
-            try _audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: options)
             
             let audioRecorder = try self._createRecorder(fileUrl: fileUrl)
             audioRecorder.prepareToRecord()
@@ -119,7 +139,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             rejecter(nil,nil,AudioError.stop("Could not stop recording, no AVAudioRecorder."))
             return
         }
-        
+
         if (self.recording) {
             self._onAudioStoppedCallback?(false);
             self._onAudioStoppedCallback = { success in
@@ -131,12 +151,6 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             }
             
             audioRecorder.stop()
-            
-            do {
-                try self._setSessionActive(active: false)
-            } catch let error {
-                rejecter(nil,nil,error)
-            }
         } else {
             resolver(nil)
             self._onAudioStoppedCallback = nil
@@ -236,4 +250,17 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         print("[ERROR] Audio recording encode error: \(String(describing: error))")
         //TODO:
     }
+    
+    func audioSessionInterrupted(_ notification: Notification) {
+        let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
+        if reason == AVAudioSessionInterruptionType.began.rawValue {
+            try! self._setSessionActive(active: true)
+        } else {
+            if self.recording {
+                self._audioRecorder?.stop()
+            }
+            try! self._setSessionActive(active: false)
+        }
+    }
 }
+
