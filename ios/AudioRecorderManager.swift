@@ -252,14 +252,18 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     }
     
     func audioSessionInterrupted(_ notification: Notification) {
-        let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
-        if reason == AVAudioSessionInterruptionType.began.rawValue {
-            try! self._setSessionActive(active: true)
-        } else {
-            if self.recording {
-                self._audioRecorder?.stop()
+        do {
+            let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
+            if reason == AVAudioSessionInterruptionType.began.rawValue {
+                if self.recording {
+                    self._audioRecorder?.stop()
+                }
+                try self._setSessionActive(active: false)
+            } else {
+                try self._setSessionActive(active: false)
             }
-            try! self._setSessionActive(active: false)
+        } catch let error {
+            print("[ERROR] Audio recording interrupted error: \(String(describing: error))")
         }
     }
 }
