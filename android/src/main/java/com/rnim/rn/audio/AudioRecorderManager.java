@@ -115,7 +115,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void checkAuthorizationStatus(Promise promise) {
-    int permissionCheck = ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.RECORD_AUDIO);
+    Activity currentActivity = getCurrentActivity();
+    if (currentActivity == null) {
+      promise.reject("E_ACTIVITY_DOES_NOT_EXIST", "Activity doesn't exist");
+      return;
+    }
+
+    int permissionCheck = ContextCompat.checkSelfPermission(currentActivity, Manifest.permission.RECORD_AUDIO);
     boolean permissionGranted = permissionCheck == PackageManager.PERMISSION_GRANTED;
     promise.resolve(permissionGranted);
   }
@@ -159,6 +165,8 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           grantResults[0] == PackageManager.PERMISSION_GRANTED &&
           grantResults[1] == PackageManager.PERMISSION_GRANTED);
     }
+    // no longer need the promise; discard local reference
+    requestPromise = null;
   }
 
   @ReactMethod
