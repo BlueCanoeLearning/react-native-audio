@@ -79,9 +79,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(self.audioSessionInterrupted), name: NSNotification.Name.AVAudioSessionInterruption, object: nil)
-        let options: AVAudioSessionCategoryOptions = [.defaultToSpeaker, .mixWithOthers]
         do {
-            try _audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: options)
             try self._setSessionActive(active: true)
             print("Audio Recording Session is active")
         } catch let error {
@@ -203,7 +201,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate func _setSessionActive(active: Bool) throws {
         do {
-            try self._audioSession.setActive(active)
+            try self._audioSession.setActive(active, with: .notifyOthersOnDeactivation)
+            print("Audio session is active: \(active), with category: \(self._audioSession.category)")
         } catch let error {
             throw AudioError.sessionActive("Failed to set audio session active state to \(active). Error: \(error)")
         }
