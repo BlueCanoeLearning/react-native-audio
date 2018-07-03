@@ -61,12 +61,15 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     fileprivate var _onAudioStoppedCallback: ((_ success: Bool) -> Void)? = nil
     
     //MARK: Overrides
-    
+    static func requiresMainQueueSetup() -> Bool {
+        return true
+    }
+
     static func moduleName() -> String! {
         return "AudioRecorder"
     }
     
-    func constantsToExport() -> [String: Any] {
+    func constantsToExport() -> [AnyHashable: Any]! {
         return [
             "MainBundlePath": Bundle.main.bundlePath,
             "NSCachesDirectoryPath": self.getPath(forDirectory: FileManager.SearchPathDirectory.cachesDirectory),
