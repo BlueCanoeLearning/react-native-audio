@@ -21,5 +21,10 @@ declare module "react-native-audio" {
         public start(fileName?: string): Promise<string>;
         public stop(): Promise<void>;
         public isRecording(): Promise<boolean>;
+
+        /* TODO: From branch tony/streaming. Needs implementation. */
+        public onProgress: (data: { currentTime: number }) => void;
+        public  onAudioData: (data: { sampleRate: number, buffer: number[] }) => void;
+        public onFinished: () => void;
     }
 }

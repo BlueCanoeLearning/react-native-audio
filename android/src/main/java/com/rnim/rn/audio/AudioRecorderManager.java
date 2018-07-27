@@ -10,6 +10,7 @@ import com.facebook.react.bridge.ReactMethod;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import java.util.HashMap;
@@ -80,9 +81,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private Thread recordingThread = null;
   private AtomicBoolean isRecordingAtomic = new AtomicBoolean(false);
 
-  int bufferSize = AudioRecord.getMinBufferSize(FASTEST_RECORDER_SAMPLERATE,
-                RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
-  int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
+  int bufferSize = 0;
   int BytesPerElement = 2; // 2 bytes in 16bit format
 
   private String currentFilePath;
@@ -193,13 +192,21 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           recordSettings[i].sampleRate);
         Log.i(TAG, msg);
 
-        newRecorder = new AudioRecord(recordSettings[i].audioSource, 
-                                   recordSettings[i].sampleRate, RECORDER_CHANNELS,
-            RECORDER_AUDIO_ENCODING, BufferElements2Rec * BytesPerElement);
+        // We'd like to work with 10ms frames if possible, regardless of our sample rate. The phone will often
+        // force us to take more data on each read.
+        int minBufferSize = AudioRecord.getMinBufferSize(recordSettings[i].sampleRate, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
+        int desiredBufferSize = (10 * recordSettings[i].sampleRate * BytesPerElement) / 1000;
+        this.bufferSize = (minBufferSize > desiredBufferSize) ? minBufferSize : desiredBufferSize;
 
-        if (newRecorder != null && newRecorder.getState() == AudioRecord.STATE_INITIALIZED) {
-          newActualSampleRate = recordSettings[i].sampleRate;
-          Log.i(TAG, "Recording setup succeeded");
+        recorder = new AudioRecord(recordSettings[i].audioSource, 
+                                   recordSettings[i].sampleRate,
+                                   RECORDER_CHANNELS,
+                                   RECORDER_AUDIO_ENCODING,
+                                   this.bufferSize);
+
+        if (recorder != null && recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+          this.actualSampleRate = recordSettings[i].sampleRate;
+          Log.i(TAG, String.format("Recording setup succeeded (buffer size = %d)", this.bufferSize));
           break;
         }
       }
@@ -251,7 +258,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private void writeAudioDataToFile() {
     // Write the output audio in byte
 
-    short sData[] = new short[BufferElements2Rec];
+    short sData[] = new short[this.bufferSize / BytesPerElement];
 
     File file = getRawFile(currentFilePath);
     // Log.v(TAG, "Will write to " + file.getAbsolutePath());
@@ -267,12 +274,25 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     while (isRecordingAtomic.get()) {
       // gets the voice output from microphone to byte format
 
-      recorder.read(sData, 0, BufferElements2Rec);
+      recorder.read(sData, 0, sData.length);
+
       try {
+        // Stream the data to any subscribers.
+        // We don't resample to 16kHz as we do for the WAV file,
+        // but we do tell the receiver what the sample rate is.
+        WritableArray audioData = Arguments.createArray();
+        for (int i=0; i < sData.length; i++) {
+          audioData.pushInt(sData[i]);
+        }
+        WritableMap body = Arguments.createMap();
+        body.putInt("sampleRate", this.actualSampleRate);
+        body.putArray("buffer", audioData);
+        sendEvent("audioData", body);
+
         // // writes the data to file from buffer
         // // stores the voice buffer
         byte bData[] = short2byte(sData);
-        os.write(bData, 0, BufferElements2Rec * BytesPerElement);
+        os.write(bData, 0, this.bufferSize);
       } catch (IOException e) {
         e.printStackTrace();
       }
