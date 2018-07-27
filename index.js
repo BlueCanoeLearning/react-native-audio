@@ -13,7 +13,7 @@ var AudioRecorderManager = NativeModules.AudioRecorderManager;
 
 var AudioRecorder = {
   startRecording: function(filePath) {
-     if (this.progressSubscription) this.progressSubscription.remove();
+    if (this.progressSubscription) this.progressSubscription.remove();
     this.progressSubscription = NativeAppEventEmitter.addListener('recordingProgress',
       (data) => {
         if (this.onProgress) {
@@ -21,6 +21,16 @@ var AudioRecorder = {
         }
       }
     );
+
+    if (this.audioDataSubscription) this.audioDataSubscription.remove();
+    this.audioDataSubscription = NativeAppEventEmitter.addListener('audioData',
+      (data) => {
+        if (this.onAudioData) {
+          this.onAudioData(data);
+        }
+      }
+    );
+
     return AudioRecorderManager.startRecording(filePath);
   },
   pauseRecording: function() {
@@ -36,6 +46,7 @@ var AudioRecorder = {
   requestAuthorization: AudioRecorderManager.requestAuthorization,
   removeListeners: function() {
     if (this.progressSubscription) this.progressSubscription.remove();
+    if (this.audioDataSubscription) this.audioDataSubscription.remove();
     if (this.finishedSubscription) this.finishedSubscription.remove();
   },
 };

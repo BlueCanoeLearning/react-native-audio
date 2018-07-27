@@ -18,6 +18,11 @@ declare module "react-native-audio" {
         checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
         requestAuthorization: () => Promise<boolean>;
         removeListeners(): void;
+
+        // events
+        onProgress: (data: { currentTime: number }) => void;
+        onAudioData: (data: { sampleRate: number, buffer: number[] }) => void;
+        onFinished: () => void;
     }
     export const AudioRecorder: IAudioRecorder;
 
