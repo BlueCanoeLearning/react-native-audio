@@ -188,10 +188,11 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
           recordSettings[i].sampleRate);
         Log.i(TAG, msg);
 
-        // We'd like to work with 10ms frames if possible, regardless of our sample rate. The phone will often
+        // We'd like to work with 25ms frames if possible, regardless of our sample rate. The phone may
         // force us to take more data on each read.
+        final int desiredFrameDurationMs = 25;
         int minBufferSize = AudioRecord.getMinBufferSize(recordSettings[i].sampleRate, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
-        int desiredBufferSize = (10 * recordSettings[i].sampleRate * BytesPerElement) / 1000;
+        int desiredBufferSize = (desiredFrameDurationMs * recordSettings[i].sampleRate * BytesPerElement) / 1000;
         this.bufferSize = (minBufferSize > desiredBufferSize) ? minBufferSize : desiredBufferSize;
 
         recorder = new AudioRecord(recordSettings[i].audioSource, 
