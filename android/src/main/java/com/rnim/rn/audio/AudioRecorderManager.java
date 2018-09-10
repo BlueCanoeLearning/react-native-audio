@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -77,7 +78,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   private AudioRecord recorder = null;
   private Thread recordingThread = null;
-  private boolean isRecording = false;
+  private AtomicBoolean isRecording = new AtomicBoolean(false);
 
   int bufferSize = AudioRecord.getMinBufferSize(FASTEST_RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING); 
@@ -172,7 +173,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   @ReactMethod
   public void startRecording(String filePath, Promise promise) {
 
-    if (isRecording) {
+    if (isRecording.get()) {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call stopRecording before starting recording");
       return;
     }
@@ -210,7 +211,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }
     recorder.startRecording();
     currentFilePath = filePath;
-    isRecording = true;
+    isRecording.set(true);
     recordingThread = new Thread(new Runnable() {
       public void run() {
         writeAudioDataToFile();
@@ -251,7 +252,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       e.printStackTrace();
     }
 
-    while (isRecording) {
+    while (isRecording.get()) {
       // gets the voice output from microphone to byte format
 
       recorder.read(sData, 0, BufferElements2Rec);
@@ -354,13 +355,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void stopRecording(Promise promise) {
-    if (!isRecording) {
+    // atomically set isRecording to false if it is true. Otherwise throw an error.
+    if (isRecording.compareAndSet(true, false) == false) {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call startRecording before stopping recording");
       return;
     }
 
     stopTimer();
-    isRecording = false;
 
     try {
       recorder.stop();
