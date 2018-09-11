@@ -173,7 +173,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   @ReactMethod
   public void startRecording(String filePath, Promise promise) {
 
-    if (isRecording.get()) {
+    if (isRecording.compareAndSet(false, true) == false) {
       logAndRejectPromise(promise, "INVALID_STATE", "Please call stopRecording before starting recording");
       return;
     }
@@ -206,12 +206,12 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }
 
     if (recorder == null) {
+      isRecording.set(false);
       logAndRejectPromise(promise, "RECORDING_NOT_PREPARED", "Please call prepareRecordingAtPath before starting recording");
       return;
     }
     recorder.startRecording();
     currentFilePath = filePath;
-    isRecording.set(true);
     recordingThread = new Thread(new Runnable() {
       public void run() {
         writeAudioDataToFile();
