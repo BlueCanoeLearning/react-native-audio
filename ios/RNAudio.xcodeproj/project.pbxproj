@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		030702B021C8436F000DD738 /* ReactNativeAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 030702AF21C8436F000DD738 /* ReactNativeAudio.m */; };
-		030702B121C8436F000DD738 /* ReactNativeAudio.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 030702AE21C8436F000DD738 /* ReactNativeAudio.h */; };
 		030702B521C84380000DD738 /* AudioRecorderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */; };
 		030702B621C8439E000DD738 /* RNAudio-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */; };
 		030702B721C8439E000DD738 /* RNAudio.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; };
@@ -26,17 +24,13 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				030702B121C8436F000DD738 /* ReactNativeAudio.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		030702A321C8435B000DD738 /* ReactNativeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeAudio.swift; sourceTree = "<group>"; };
 		030702AC21C8436F000DD738 /* libReactNativeAudio.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libReactNativeAudio.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		030702AE21C8436F000DD738 /* ReactNativeAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReactNativeAudio.h; sourceTree = "<group>"; };
-		030702AF21C8436F000DD738 /* ReactNativeAudio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReactNativeAudio.m; sourceTree = "<group>"; };
 		03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RNAudio-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorderManager.swift; sourceTree = "<group>"; };
 		03AA33FF1EE74E1700946913 /* NativeTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeTransport.m; sourceTree = "<group>"; };
@@ -63,23 +57,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		030702A221C8435B000DD738 /* ReactNativeAudio */ = {
-			isa = PBXGroup;
-			children = (
-				030702A321C8435B000DD738 /* ReactNativeAudio.swift */,
-			);
-			path = ReactNativeAudio;
-			sourceTree = "<group>";
-		};
-		030702AD21C8436F000DD738 /* ReactNativeAudio */ = {
-			isa = PBXGroup;
-			children = (
-				030702AE21C8436F000DD738 /* ReactNativeAudio.h */,
-				030702AF21C8436F000DD738 /* ReactNativeAudio.m */,
-			);
-			path = ReactNativeAudio;
-			sourceTree = "<group>";
-		};
 		03AA33FE1EE74D6300946913 /* RNAudio */ = {
 			isa = PBXGroup;
 			children = (
@@ -96,8 +73,6 @@
 			isa = PBXGroup;
 			children = (
 				03AA33FE1EE74D6300946913 /* RNAudio */,
-				030702A221C8435B000DD738 /* ReactNativeAudio */,
-				030702AD21C8436F000DD738 /* ReactNativeAudio */,
 				42F559BB1CFC90C400DC3F84 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -220,7 +195,6 @@
 				030702B721C8439E000DD738 /* RNAudio.h in Sources */,
 				030702B821C8439E000DD738 /* NativeTransport.m in Sources */,
 				030702B521C84380000DD738 /* AudioRecorderManager.swift in Sources */,
-				030702B021C8436F000DD738 /* ReactNativeAudio.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,12 +230,21 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6VX6XJM7ED;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../../React/**",
+					"$(SRCROOT)/Libraries/**",
+					"$(SRCROOT)/../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../react-native/React/**",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/RNAudio-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -287,11 +270,20 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6VX6XJM7ED;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../../React/**",
+					"$(SRCROOT)/Libraries/**",
+					"$(SRCROOT)/../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../node_modules/react-native/React/**",
+					"$(SRCROOT)/../../react-native/React/**",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/RNAudio-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -391,7 +383,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -431,7 +423,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
