@@ -17,6 +17,7 @@ interface AudioRecorderManager {
 
 interface AudioRecorderOwnProps {
     recording: boolean;
+    audioFileName?: string;
     onRecordingStateChanged: (state: { isRecording: boolean, fileName?: string, filePath?: string, audioBuffer?: Uint8Array}) => void;
 }
 
@@ -61,7 +62,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
     public componentWillReceiveProps(nextProps: AudioRecorderOwnProps): void {
         if (this.props.recording !== nextProps.recording) {
             if (nextProps.recording === true) {
-                this.start()
+                this.start(this.props.audioFileName)
                     .then((fileName) => {
                         this.lastRecordedFileName = fileName;
                         const filePath = RNFetchBlob.fs.dirs.DocumentDir;
@@ -135,7 +136,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         }
     }
 
-    public async start(): Promise<string> {
+    public async start(filename?: string): Promise<string> {
         let authStatus = this.state.authStatus;
         if (authStatus === "undetermined" || !authStatus) {
             authStatus = await this.updateAuthStatus();
@@ -143,14 +144,13 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
             // if (Log.enabled) { Log.v(`[AudioRecordManager.start] updated auth status: ${this.currentAuthStatus}`); }
         }
         if (authStatus === true || authStatus === "granted") {
-            const filename = `sentence_${Date.now()}.wav`;
             const isRecording = await this.isRecording();
-
+            const recordedFileName = filename || `${Date.now()}.wav`;
             if (isRecording) {
                 await this.recorder.stopRecording();
             }
-            await this.recorder.startRecording(filename);
-            return filename;
+            await this.recorder.startRecording(recordedFileName);
+            return recordedFileName;
         } else {
             const error = new Error(`Microphone could not be used because permission was denied. Please allow microphone use in your device settings.`);
             error.name = "MicrophoneAuth";

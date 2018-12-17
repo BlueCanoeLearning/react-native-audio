@@ -1,35 +1,6 @@
 declare module "react-native-audio" {
     import React from "react";
 
-    import ReactNative, {
-        NativeModules,
-        NativeAppEventEmitter,
-        DeviceEventEmitter,
-        Platform
-    } from "react-native";
-
-    // export type AudioAuthorizationStatus = "granted" | "denied" | "undetermined" | true | false;
-
-    // export interface IAudioRecorder {
-    //     startRecording: (fileName: string) => Promise<void>;
-    //     stopRecording: () => Promise<void>;
-    //     pauseRecording: () => Promise<void>;
-    //     isRecording: () => Promise<boolean>;
-    //     checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
-    //     requestAuthorization: () => Promise<boolean>;
-    //     removeListeners(): void;
-    // }
-    // export const AudioRecorder: IAudioRecorder;
-
-    // interface IAudioUtils {
-    //     MainBundlePath: string,
-    //     CachesDirectoryPath: string,
-    //     DocumentDirectoryPath: string,
-    //     LibraryDirectoryPath: string,
-    // }
-
-    // export const AudioUtils: IAudioUtils;
-
     export type AudioAuthorizationStatus = "granted" | "denied" | "undetermined" | true | false;
     export interface AudioRecorderStateEvent {
         isRecording: boolean;
@@ -39,6 +10,7 @@ declare module "react-native-audio" {
     }
     export interface AudioRecorderOwnProps {
         recording: boolean;
+        audioFileName?: string;
         onRecordingStateChanged: (state: AudioRecorderStateEvent) => void;
     }
 
@@ -46,7 +18,7 @@ declare module "react-native-audio" {
         constructor(props: AudioRecorderOwnProps);
         public authorizeIfNeeded(): Promise<AudioAuthorizationStatus>;
         public updateAuthStatus(): Promise<AudioAuthorizationStatus>;
-        public start(): Promise<string>;
+        public start(fileName?: string): Promise<string>;
         public stop(): Promise<void>;
         public isRecording(): Promise<boolean>;
     }
