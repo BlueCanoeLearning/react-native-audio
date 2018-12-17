@@ -39,7 +39,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
             .catch(() => { /*  */ });
     }
 
-    public componentWillMount() {
+    public componentWillUnmount() {
         this.isRecording()
         .then((isRecording) => {
             if (isRecording) {

@@ -17,7 +17,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
     private lastRecordedFileName;
     constructor(props: AudioRecorderOwnProps);
     componentDidMount(): void;
-    componentWillMount(): void;
+    componentWillUnmount(): void;
     render(): null;
     componentWillReceiveProps(nextProps: AudioRecorderOwnProps): void;
     authorizeIfNeeded(): Promise<AudioAuthorizationStatus>;
