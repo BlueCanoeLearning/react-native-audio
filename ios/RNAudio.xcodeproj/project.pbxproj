@@ -7,13 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		030702B021C8436F000DD738 /* ReactNativeAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 030702AF21C8436F000DD738 /* ReactNativeAudio.m */; };
+		030702B121C8436F000DD738 /* ReactNativeAudio.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 030702AE21C8436F000DD738 /* ReactNativeAudio.h */; };
+		030702B521C84380000DD738 /* AudioRecorderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */; };
+		030702B621C8439E000DD738 /* RNAudio-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */; };
+		030702B721C8439E000DD738 /* RNAudio.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; };
+		030702B821C8439E000DD738 /* NativeTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FF1EE74E1700946913 /* NativeTransport.m */; };
 		03AA340A1EE74EC000946913 /* RNAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		03AA340E1EE74EC700946913 /* AudioRecorderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */; };
 		03E7577F1EE9F437007478FD /* NativeTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FF1EE74E1700946913 /* NativeTransport.m */; };
 		03E757801EE9F43D007478FD /* RNAudio-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		030702AA21C8436F000DD738 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+				030702B121C8436F000DD738 /* ReactNativeAudio.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		030702A321C8435B000DD738 /* ReactNativeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNativeAudio.swift; sourceTree = "<group>"; };
+		030702AC21C8436F000DD738 /* libReactNativeAudio.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libReactNativeAudio.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		030702AE21C8436F000DD738 /* ReactNativeAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReactNativeAudio.h; sourceTree = "<group>"; };
+		030702AF21C8436F000DD738 /* ReactNativeAudio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReactNativeAudio.m; sourceTree = "<group>"; };
 		03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RNAudio-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorderManager.swift; sourceTree = "<group>"; };
 		03AA33FF1EE74E1700946913 /* NativeTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeTransport.m; sourceTree = "<group>"; };
@@ -23,6 +46,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		030702A921C8436F000DD738 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		03AA34021EE74EC000946913 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +63,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		030702A221C8435B000DD738 /* ReactNativeAudio */ = {
+			isa = PBXGroup;
+			children = (
+				030702A321C8435B000DD738 /* ReactNativeAudio.swift */,
+			);
+			path = ReactNativeAudio;
+			sourceTree = "<group>";
+		};
+		030702AD21C8436F000DD738 /* ReactNativeAudio */ = {
+			isa = PBXGroup;
+			children = (
+				030702AE21C8436F000DD738 /* ReactNativeAudio.h */,
+				030702AF21C8436F000DD738 /* ReactNativeAudio.m */,
+			);
+			path = ReactNativeAudio;
+			sourceTree = "<group>";
+		};
 		03AA33FE1EE74D6300946913 /* RNAudio */ = {
 			isa = PBXGroup;
 			children = (
@@ -49,6 +96,8 @@
 			isa = PBXGroup;
 			children = (
 				03AA33FE1EE74D6300946913 /* RNAudio */,
+				030702A221C8435B000DD738 /* ReactNativeAudio */,
+				030702AD21C8436F000DD738 /* ReactNativeAudio */,
 				42F559BB1CFC90C400DC3F84 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -57,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				03AA34061EE74EC000946913 /* RNAudio.framework */,
+				030702AC21C8436F000DD738 /* libReactNativeAudio.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +126,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		030702AB21C8436F000DD738 /* ReactNativeAudio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 030702B221C8436F000DD738 /* Build configuration list for PBXNativeTarget "ReactNativeAudio" */;
+			buildPhases = (
+				030702A821C8436F000DD738 /* Sources */,
+				030702A921C8436F000DD738 /* Frameworks */,
+				030702AA21C8436F000DD738 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ReactNativeAudio;
+			productName = ReactNativeAudio;
+			productReference = 030702AC21C8436F000DD738 /* libReactNativeAudio.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		03AA34051EE74EC000946913 /* RNAudio */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 03AA340B1EE74EC000946913 /* Build configuration list for PBXNativeTarget "RNAudio" */;
@@ -100,9 +167,15 @@
 		42F559B21CFC90C400DC3F84 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1010;
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Joshua Sierles";
 				TargetAttributes = {
+					030702AB21C8436F000DD738 = {
+						CreatedOnToolsVersion = 10.1;
+						DevelopmentTeam = 6VX6XJM7ED;
+						ProvisioningStyle = Automatic;
+					};
 					03AA34051EE74EC000946913 = {
 						CreatedOnToolsVersion = 8.3.2;
 						DevelopmentTeam = 6VX6XJM7ED;
@@ -123,6 +196,7 @@
 			projectRoot = "";
 			targets = (
 				03AA34051EE74EC000946913 /* RNAudio */,
+				030702AB21C8436F000DD738 /* ReactNativeAudio */,
 			);
 		};
 /* End PBXProject section */
@@ -138,6 +212,18 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		030702A821C8436F000DD738 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				030702B621C8439E000DD738 /* RNAudio-Bridging-Header.h in Sources */,
+				030702B721C8439E000DD738 /* RNAudio.h in Sources */,
+				030702B821C8439E000DD738 /* NativeTransport.m in Sources */,
+				030702B521C84380000DD738 /* AudioRecorderManager.swift in Sources */,
+				030702B021C8436F000DD738 /* ReactNativeAudio.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		03AA34011EE74EC000946913 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -150,6 +236,67 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		030702B321C8436F000DD738 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6VX6XJM7ED;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		030702B421C8436F000DD738 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6VX6XJM7ED;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 3.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		03AA340C1EE74EC000946913 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -294,6 +441,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		030702B221C8436F000DD738 /* Build configuration list for PBXNativeTarget "ReactNativeAudio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				030702B321C8436F000DD738 /* Debug */,
+				030702B421C8436F000DD738 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		03AA340B1EE74EC000946913 /* Build configuration list for PBXNativeTarget "RNAudio" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
