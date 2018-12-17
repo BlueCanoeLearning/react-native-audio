@@ -1,9 +1,13 @@
 {
   "name": "react-native-audio",
-  "version": "3.2.10",
+  "version": "10.0.0",
   "description": "React Native extension for recording audio",
   "main": "index.js",
   "author": "Joshua Sierles <joshua@diluvia.net> (https://github.com/jsierles)",
+  "scripts": {
+    "prebuild": "rm -rf ./lib",
+    "build": "tsc"
+  },
   "files": [
     "ios/AudioRecorderManager.m",
     "ios/AudioRecorderManager.h",
@@ -23,5 +27,18 @@
     "type": "git",
     "url": "git@github.com:jsierles/react-native-audio.git"
   },
-  "nativePackage": true
+  "nativePackage": true,
+  "peerDependencies": {
+    "react": "16.0.0",
+    "react-native": "0.51.0",
+    "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@types/base-64": "^0.1.2",
+    "@types/react-native": "^0.57.18",
+    "react": "16.0.0",
+    "react-native": "0.51.0",
+    "react-native-fetch-blob": "https://github.com/BlueCanoeLearning/react-native-fetch-blob#internal-master",
+    "typescript": "^3.2.2"
+  }
 }
