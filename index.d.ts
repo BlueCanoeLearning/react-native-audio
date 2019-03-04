@@ -12,6 +12,7 @@ declare module "react-native-audio" {
         recording: boolean;
         audioFileName?: string;
         onRecordingStateChanged: (state: AudioRecorderStateEvent) => void;
+        onAuthorizationStatus?: (authStates: AudioAuthorizationStatus) => void;
     }
 
     export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnProps> {

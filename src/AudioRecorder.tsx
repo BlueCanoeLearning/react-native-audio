@@ -19,6 +19,7 @@ interface AudioRecorderOwnProps {
     recording: boolean;
     audioFileName?: string;
     onRecordingStateChanged: (state: { isRecording: boolean, fileName?: string, filePath?: string, audioBuffer?: Uint8Array}) => void;
+    onAuthorizationStatus?: (authStates: AudioAuthorizationStatus) => void;
 }
 
 interface AudioRecordState {
@@ -38,6 +39,14 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         this.authorizeIfNeeded()
             .then(() => Promise.resolve())
             .catch(() => { /*  */ });
+    }
+
+    public componentDidUpdate(prevProps: Readonly<AudioRecorderOwnProps>, prevState: Readonly<AudioRecordState>) {
+        if (prevState.authStatus !== this.state.authStatus) {
+            if (this.props.onAuthorizationStatus) {
+                this.props.onAuthorizationStatus(this.state.authStatus);
+            }
+        }
     }
 
     public componentWillUnmount() {
