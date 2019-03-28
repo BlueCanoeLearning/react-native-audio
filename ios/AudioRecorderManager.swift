@@ -186,11 +186,11 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     @objc(checkAuthorizationStatus:rejecter:)
     func checkAuthorizationStatus(resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
-        let recordPermission = self._audioSession.recordPermission()
+        let recordPermission = self._audioSession.recordPermission
         switch recordPermission {
-        case AVAudioSessionRecordPermission.granted: resolver("granted")
-        case AVAudioSessionRecordPermission.denied: resolver("denied")
-        case AVAudioSessionRecordPermission.undetermined: resolver("undetermined")
+        case AVAudioSession.RecordPermission.granted: resolver("granted")
+        case AVAudioSession.RecordPermission.denied: resolver("denied")
+        case AVAudioSession.RecordPermission.undetermined: resolver("undetermined")
         default:
             rejecter(nil, nil, AudioError.permissions("Unknown record permission type: \(recordPermission)"))
         }
@@ -204,7 +204,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate func _setSessionActive(active: Bool) throws {
         do {
-            try self._audioSession.setActive(active, with: .notifyOthersOnDeactivation)
+            try self._audioSession.setActive(active, options: .notifyOthersOnDeactivation)
             print("Audio session is active: \(active), with category: \(self._audioSession.category)")
         } catch let error {
             throw AudioError.sessionActive("Failed to set audio session active state to \(active). Error: \(error)")
@@ -256,7 +256,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     func audioSessionInterrupted(_ notification: Notification) {
         do {
             let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
-            if reason == AVAudioSessionInterruptionType.began.rawValue {
+            if reason == AVAudioSession.InterruptionType.began.rawValue {
                 if self.recording {
                     self._audioRecorder?.stop()
                 }
