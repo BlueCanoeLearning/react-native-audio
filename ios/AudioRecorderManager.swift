@@ -46,6 +46,10 @@ enum AudioError : CustomNSError {
 @objc(AudioRecorderManager)
 class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
+    //    fileprivate extension Selector {
+    //        static let audioSessionInterrupted = #selector(AudioRecorderManager.audioSessionInterrupted)
+    //    }
+    
     fileprivate let _audioRecordSettings: [String: Any] = [
         AVFormatIDKey: NSNumber(value: Int32(kAudioFormatLinearPCM)),
         AVSampleRateKey: NSNumber(value: 16000),
@@ -64,7 +68,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     static func requiresMainQueueSetup() -> Bool {
         return true
     }
-
+    
     static func moduleName() -> String! {
         return "AudioRecorder"
     }
@@ -81,7 +85,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     override init() {
         super.init()
-        NotificationCenter.default.addObserver(self, selector: #selector(self.audioSessionInterrupted), name: NSNotification.Name.AVAudioSessionInterruption, object: nil)
+        //        NotificationCenter.default.addObserver(self, selector: .audioSessionInterrupted, name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.audioSessionInterrupted), name: AVAudioSession.interruptionNotification, object: nil)
         do {
             try self._setSessionActive(active: true)
             print("Audio Recording Session is active")
@@ -103,7 +108,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     @objc(startRecording:resolver:rejecter:)
     func startRecording(filename: String, resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        guard self._audioSession.recordPermission() == .granted else {
+        guard self._audioSession.recordPermission == .granted else {
             rejecter(nil,nil, AudioError.permissions("Could not record audio, user has not granted permissions"))
             return
         }
@@ -140,7 +145,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             rejecter(nil,nil,AudioError.stop("Could not stop recording, no AVAudioRecorder."))
             return
         }
-
+        
         if (self.recording) {
             self._onAudioStoppedCallback?(false);
             self._onAudioStoppedCallback = { success in
@@ -186,17 +191,18 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     @objc(checkAuthorizationStatus:rejecter:)
     func checkAuthorizationStatus(resolver: @escaping RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
-        let recordPermission = self._audioSession.recordPermission
-        switch recordPermission {
-        case AVAudioSession.RecordPermission.granted: resolver("granted")
-        case AVAudioSession.RecordPermission.denied: resolver("denied")
-        case AVAudioSession.RecordPermission.undetermined: resolver("undetermined")
-        default:
-            rejecter(nil, nil, AudioError.permissions("Unknown record permission type: \(recordPermission)"))
-        }
+        resolver(_checkAuthorizationStatus())
     }
     
     //MARK: Privates
+    
+    fileprivate func _checkAuthorizationStatus() -> String {
+        switch AVAudioSession.sharedInstance().recordPermission {
+        case AVAudioSession.RecordPermission.granted: return "granted"
+        case AVAudioSession.RecordPermission.denied: return "denied"
+        case AVAudioSession.RecordPermission.undetermined: return "undetermined"
+        }
+    }
     
     fileprivate var recording: Bool {
         return self._audioRecorder?.isRecording ?? false
@@ -253,6 +259,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         //TODO:
     }
     
+    @objc
     func audioSessionInterrupted(_ notification: Notification) {
         do {
             let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
@@ -269,4 +276,3 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         }
     }
 }
-
