@@ -61,6 +61,9 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     ]
     
     fileprivate let _audioSession = AVAudioSession.sharedInstance()
+    
+    fileprivate var _lastAudioCategory:  AVAudioSession.Category = AVAudioSession.Category.ambient;
+    fileprivate var _lastAudioCategoryOptions:  AVAudioSession.CategoryOptions = [];
     fileprivate var _audioRecorder: AVAudioRecorder? = nil
     fileprivate var _onAudioStoppedCallback: ((_ success: Bool) -> Void)? = nil
     
@@ -122,7 +125,14 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         let fileUrl = documentsPath.appendingPathComponent(filename)
         
         do {
-            
+            // switch into record audio category to prevent the silent switch from supressing audio recording
+            if (self._audioSession.category != AVAudioSession.Category.record && self._audioSession.category != self._lastAudioCategory) {
+                self._lastAudioCategory = self._audioSession.category
+                self._lastAudioCategoryOptions = self._audioSession.categoryOptions
+            }
+
+            try self._audioSession.setCategory(AVAudioSession.Category.record)
+
             let audioRecorder = try self._createRecorder(fileUrl: fileUrl)
             audioRecorder.prepareToRecord()
             
@@ -250,6 +260,16 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         self._onAudioStoppedCallback?(flag)
         self._onAudioStoppedCallback = nil
+        
+        // when recording is complete, return to last previously used audio category
+        if (self._audioSession.category == AVAudioSession.Category.record) {
+            do {
+                try self._audioSession.setCategory(self._lastAudioCategory, options: self._lastAudioCategoryOptions)
+                print("AudioRecordManager changed category to \(self._lastAudioCategory)")
+            } catch {
+                print("[ERROR] on audioRecorderDidFinishRecording error: \(String(describing: error))")
+            }
+        }
     }
     
     
