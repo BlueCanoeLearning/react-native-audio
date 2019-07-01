@@ -1,21 +1,48 @@
-apply plugin: 'com.android.library'
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
 
-android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
-    supportLibVersion = "28.0.0"
-
-    defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
-        }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.3.2'
     }
 }
 
+apply plugin: 'com.android.library'
+
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
+android {
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
+
+    defaultConfig {
+        minSdkVersion safeExtGet('minSdkVersion', 16)
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
+
+        versionCode 2
+        versionName "1.1"
+    }
+    lintOptions {
+       warning 'InvalidPackage', 'MissingPermission'
+    }
+}
+
+repositories {
+    google()
+    maven {
+        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+        url "$rootDir/../node_modules/react-native/android"
+    }
+    jcenter()
+}
+
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+    implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
+    //noinspection GradleCompatible
+    implementation "com.android.support:appcompat-v7:${safeExtGet('supportLibVersion', '28.0.0')}"
+    implementation "com.android.support:support-v4:${safeExtGet('supportLibVersion', '28.0.0')}"
+    // implementation "com.android.support:support-media-compat:${safeExtGet('supportLibVersion', '28.0.0')}"
 }
