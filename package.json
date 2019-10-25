@@ -29,9 +29,8 @@
   },
   "nativePackage": true,
   "peerDependencies": {
-    "react": "16.8.3",
-    "react-native": "0.59.3",
-    "tslib": "^1.9.3"
+    "react": ">=16.8.3",
+    "react-native": ">=0.59.3"
   },
   "devDependencies": {
   	"@babel/core": "^7.0.0-0",
@@ -43,5 +42,8 @@
     "tslib": "^1.9.3",
     "typescript": "^3.3.3"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "resolutions": {
+    "**/**/fsevents": "^1.2.9"
+  }
 }
