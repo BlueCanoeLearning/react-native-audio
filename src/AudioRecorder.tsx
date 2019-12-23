@@ -27,6 +27,8 @@ interface AudioRecordState {
     authStatus: AudioAuthorizationStatus;
 }
 export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnProps, AudioRecordState> {
+    private readonly androidRecordingTimeoutSec = 15;
+    private androidTimeoutHandler: number | undefined;
 
     private recorder = NativeModules.AudioRecorderManager as AudioRecorderManager;
     private lastRecordedFileName: string | null = null;
@@ -166,6 +168,9 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
                 await this.recorder.stopRecording();
             }
             await this.recorder.startRecording(recordedFileName);
+            if (Platform.OS === "android") {
+                this.androidTimeoutHandler = window.setTimeout(this.android_StopRecordingTimeOut, 1000 * this.androidRecordingTimeoutSec);
+            }
             return recordedFileName;
         } else {
             const error = new Error(`Microphone could not be used because permission was denied. Please allow microphone use in your device settings.`);
@@ -176,6 +181,9 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
 
     public async stop(): Promise<void> {
         await this.recorder.stopRecording();
+        window.clearTimeout(this.androidTimeoutHandler);
+        const audioBuffer = await this.extractAudioBuffer();
+        this.dispatchAudioBuffer(audioBuffer);
     }
 
     public async isRecording(): Promise<boolean> {
@@ -183,7 +191,16 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         return isRecording;
     }
 
-    private async extractAudioBuffer(uri: string): Promise<Uint8Array> {
+    private async extractAudioBuffer(filePath?: string): Promise<Uint8Array> {
+        let uri: string;
+        if (filePath) {
+            uri = filePath;
+        } else
+        if (this.lastRecordedFileName) {
+            uri = `${RNFetchBlob.fs.dirs.DocumentDir}/${this.lastRecordedFileName}`;
+        } else {
+            throw new Error(`Audio recorder failed to extract audio buffer, missing file name`);
+        }
         const b64Audio = await RNFetchBlob.fs.readFile(uri, "base64") as string;
         const bufferString = Base64.decode(b64Audio);
         const bufferArray = new Array(bufferString.length);
@@ -192,5 +209,29 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         }
         const bufferByteArray = new Uint8Array(bufferArray);
         return bufferByteArray;
+    }
+
+    private dispatchAudioBuffer = (audioBuffer ?: Uint8Array) => {
+        const fileName = this.lastRecordedFileName || undefined;
+        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
+        this.props.onRecordingStateChanged({ audioBuffer, fileName, filePath, isRecording: false });
+        this.lastRecordedFileName = null;
+    }
+
+    private android_StopRecordingTimeOut = () => {
+        window.clearTimeout(this.androidTimeoutHandler);
+
+        this.isRecording().then((isRecording) => {
+            if (isRecording) {
+                return this.stop();
+            }
+            return Promise.resolve();
+        })
+        .catch((reason) => {
+            // tslint:disable-next-line:no-console
+            console.warn(`[AudioRecorder] failed to stop recording ${reason}`);
+            this.props.onRecordingStateChanged({ isRecording: false });
+            this.lastRecordedFileName = null;
+        });
     }
 }
