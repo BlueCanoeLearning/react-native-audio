@@ -63,9 +63,7 @@ enum AudioError : CustomNSError {
 @objc(AudioRecorderManager)
 class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
-    //    fileprivate extension Selector {
-    //        static let audioSessionInterrupted = #selector(AudioRecorderManager.audioSessionInterrupted)
-    //    }
+    fileprivate let _maxRecordingDurationSec: TimeInterval = 15.0
     
     fileprivate let _audioRecordSettings: [String: Any] = [
         AVFormatIDKey: NSNumber(value: Int32(kAudioFormatLinearPCM)),
@@ -153,7 +151,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             
             try self._setSessionActive(active: true)
             
-            audioRecorder.record()
+            audioRecorder.record(forDuration: self._maxRecordingDurationSec)
             resolver(nil)
             
         } catch let error {
@@ -195,6 +193,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         
         if (self.recording) {
             audioRecorder.pause()
+            resolver(nil);
         } else {
             rejecter(nil,nil,AudioError.pause("Could not pause recording, recording is not in progress."))
         }
@@ -338,7 +337,9 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
                 if self.recording {
                     //                    if (wasSuspended) {
                     self._audioRecorder?.stop()
-                    //                         self._onAudioStoppedCallback?(false);
+                    // FIXME: this may crash
+                    self._onAudioStoppedCallback?(false);
+                    self._onAudioStoppedCallback = nil;
                     //                    }
                     try self._setSessionActive(active: false)
                 }
