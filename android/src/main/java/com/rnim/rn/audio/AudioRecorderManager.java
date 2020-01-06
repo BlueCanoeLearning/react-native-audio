@@ -439,6 +439,40 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     stopRecording(promise);
   }
 
+  /* private void stopRecording() { 
+    if (isRecordingAtomic.compareAndSet(true, false) == false) {
+      return;
+    }
+
+    if (recorder == null) {
+      return;
+    }
+
+    stopTimer();
+
+    try {
+      recorder.stop();
+      recorder.release();
+      recorder = null;
+      recordingThread.join(); // wait for recordingThread to finish saving the file
+    } catch (final RuntimeException e) {
+      return;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      recorder = null;
+      recordingThread = null;
+    }
+    File f1 = getRawFile(currentFilePath);
+    File f2 = getWavFile(currentFilePath);
+    try {
+      rawToWave(f1, f2);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  } */
+
   private void startTimer() {
     stopTimer();
     timer = new Timer();
