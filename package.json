@@ -1,6 +1,6 @@
 {
   "name": "react-native-audio",
-  "version": "10.2.16",
+  "version": "20.7.5",
   "description": "React Native extension for recording audio",
   "main": "index.js",
   "author": "Josh Baxley <josh@bluecanoelearning.com>",
@@ -29,18 +29,19 @@
   },
   "nativePackage": true,
   "peerDependencies": {
-    "react": ">=16.8.3",
-    "react-native": ">=0.59.3"
+    "react": ">=16.9.0",
+    "react-native": ">=0.61.5",
+    "react-native-fetch-blob": ">=2.0.0"
   },
   "devDependencies": {
-  	"@babel/core": "^7.0.0-0",
+    "@babel/core": "^7.6.2",
     "@types/base-64": "^0.1.2",
     "@types/react-native": "^0.57.37",
-    "react": "16.8.3",
-    "react-native": "0.59.3",
-    "react-native-fetch-blob": "https://github.com/BlueCanoeLearning/react-native-fetch-blob#internal-master",
+    "react": "16.9.0",
+    "react-native": "0.61.5",
+    "react-native-fetch-blob": "https://github.com/BlueCanoeLearning/react-native-fetch-blob#bluecanoe",
     "tslib": "^1.9.3",
-    "typescript": "^3.3.3"
+    "typescript": "^3.7.3"
   },
   "dependencies": {},
   "resolutions": {

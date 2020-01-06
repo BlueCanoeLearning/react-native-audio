@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
   s.requires_arc        = true
   s.platform            = :ios, "9.0"
   
-  s.dependency 'React/Core'
+  s.dependency 'React'
   
   s.subspec 'Core' do |ss|
     ss.source_files     = "ios/*.{h,m,swift}"
