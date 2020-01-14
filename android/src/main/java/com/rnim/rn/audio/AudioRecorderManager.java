@@ -26,10 +26,11 @@ import android.os.Environment;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.AudioFormat;
-import androidx.appcompat.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.util.Log;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+import com.facebook.react.modules.core.PermissionListener;
 
 import java.io.FileInputStream;
 
@@ -146,10 +147,36 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     // We'll resolve this in the callback
     requestPromise = promise;
 
-    ActivityCompat.requestPermissions(
-      currentActivity,
-      new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-      MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
+    PermissionAwareActivity permissionAwareActivity = getPermissionAwareActivity();
+    permissionAwareActivity.requestPermissions(
+        new String[] { Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE },
+        MY_PERMISSIONS_REQUEST_RECORD_AUDIO, new PermissionListener() {
+          @Override
+            public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+              if (requestCode == MY_PERMISSIONS_REQUEST_RECORD_AUDIO) {
+                if (permissions.length == 0) {
+                  Log.i(TAG, "RNAudio: onRequestPermissionsResult : cancelled!");
+                  requestPromise.reject("E_ACTIVITY_CANCELLED", "User cancelled the permission request");
+                  // no longer need the promise; discard local reference
+                  requestPromise = null;
+                  return true;
+                }
+
+                // Did we get all requested permissions?
+                requestPromise.resolve(permissions.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED);
+                // no longer need the promise; discard local reference
+                requestPromise = null;
+                return true;
+              }
+              return false;
+            }
+        });
+    
+    // ActivityCompat.requestPermissions(
+    //   currentActivity,
+    //   new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+    //   MY_PERMISSIONS_REQUEST_RECORD_AUDIO);
   }
 
   public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -565,5 +592,16 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   private File getWavFile(String fileName) {
     File filePath = getStorageDirectory();
     return new File(filePath, fileName);
+  }
+  
+  private PermissionAwareActivity getPermissionAwareActivity() {
+    Activity activity = getCurrentActivity();
+    if (activity == null) {
+      throw new IllegalStateException("Tried to use permissions API while not attached to an Activity.");
+    } else if (!(activity instanceof PermissionAwareActivity)) {
+      throw new IllegalStateException(
+          "Tried to use permissions API but the host Activity doesn't implement PermissionAwareActivity.");
+    }
+    return (PermissionAwareActivity) activity;
   }
 }
