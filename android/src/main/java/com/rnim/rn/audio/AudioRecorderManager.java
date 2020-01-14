@@ -26,8 +26,8 @@ import android.os.Environment;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.AudioFormat;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import androidx.appcompat.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
