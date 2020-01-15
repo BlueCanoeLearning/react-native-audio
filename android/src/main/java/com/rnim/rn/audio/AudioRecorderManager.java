@@ -145,7 +145,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }
 
     // We'll resolve this in the callback
-    requestPromise = promise;
+    final Promise permissionPromise = promise;
 
     PermissionAwareActivity permissionAwareActivity = getPermissionAwareActivity();
     permissionAwareActivity.requestPermissions(
@@ -156,17 +156,15 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
               if (requestCode == MY_PERMISSIONS_REQUEST_RECORD_AUDIO) {
                 if (permissions.length == 0) {
                   Log.i(TAG, "RNAudio: onRequestPermissionsResult : cancelled!");
-                  requestPromise.reject("E_ACTIVITY_CANCELLED", "User cancelled the permission request");
+                  permissionPromise.reject("E_ACTIVITY_CANCELLED", "User cancelled the permission request");
                   // no longer need the promise; discard local reference
-                  requestPromise = null;
                   return true;
                 }
 
                 // Did we get all requested permissions?
-                requestPromise.resolve(permissions.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                permissionPromise.resolve(permissions.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                     && grantResults[1] == PackageManager.PERMISSION_GRANTED);
                 // no longer need the promise; discard local reference
-                requestPromise = null;
                 return true;
               }
               return false;
