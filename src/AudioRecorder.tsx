@@ -47,6 +47,46 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
                 this.props.onAuthorizationStatus(this.state.authStatus);
             }
         }
+
+        if (this.props.recording !== prevProps.recording) {
+            if (this.props.recording === true) {
+                this.start(this.props.audioFileName)
+                    .then((fileName) => {
+                        this.lastRecordedFileName = fileName;
+                        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
+                        this.props.onRecordingStateChanged({ fileName, filePath, isRecording: true });
+                    })
+                    .catch((reason) => {
+                        // tslint:disable-next-line:no-console
+                        console.warn(`[AudioRecorder] failed to start recording ${reason}`);
+                        this.props.onRecordingStateChanged({ isRecording: false });
+                        this.lastRecordedFileName = null;
+                    });
+            } else if (this.props.recording === false) {
+                this.stop()
+                    .then(() => {
+                        const fileName = this.lastRecordedFileName;
+
+                        if (fileName) {
+                            const fullFilePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${this.lastRecordedFileName}`;
+                            return this.extractAudioBuffer(fullFilePath);
+                        } else {
+                            return Promise.resolve(undefined);
+                        }
+                    }).then((audioBuffer?: Uint8Array) => {
+                        const fileName = this.lastRecordedFileName || undefined;
+                        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
+                        this.props.onRecordingStateChanged({ audioBuffer, fileName, filePath, isRecording: false });
+                        this.lastRecordedFileName = null;
+                    })
+                    .catch((reason) => {
+                        // tslint:disable-next-line:no-console
+                        console.warn(`[AudioRecorder] failed to stop recording ${reason}`);
+                        this.props.onRecordingStateChanged({ isRecording: false });
+                        this.lastRecordedFileName = null;
+                    });
+            }
+        }
     }
 
     public componentWillUnmount() {
@@ -66,48 +106,6 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
 
     public render() {
         return null;
-    }
-
-    public componentWillReceiveProps(nextProps: AudioRecorderOwnProps): void {
-        if (this.props.recording !== nextProps.recording) {
-            if (nextProps.recording === true) {
-                this.start(this.props.audioFileName)
-                    .then((fileName) => {
-                        this.lastRecordedFileName = fileName;
-                        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
-                        this.props.onRecordingStateChanged({ fileName, filePath, isRecording: true });
-                    })
-                    .catch((reason) => {
-                        // tslint:disable-next-line:no-console
-                        console.warn(`[AudioRecorder] failed to start recording ${reason}`);
-                        this.props.onRecordingStateChanged({ isRecording: false });
-                        this.lastRecordedFileName = null;
-                    });
-            } else if (nextProps.recording === false) {
-                this.stop()
-                    .then(() => {
-                        const fileName = this.lastRecordedFileName;
-
-                        if (fileName) {
-                            const fullFilePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${this.lastRecordedFileName}`;
-                            return this.extractAudioBuffer(fullFilePath);
-                        } else {
-                            return Promise.resolve(undefined);
-                        }
-                    }).then((audioBuffer?: Uint8Array) => {
-                        const fileName = this.lastRecordedFileName || undefined;
-                        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
-                        this.props.onRecordingStateChanged({ audioBuffer, fileName, filePath, isRecording: false });
-                        this.lastRecordedFileName = null;
-                    })
-                    .catch ((reason) => {
-                        // tslint:disable-next-line:no-console
-                        console.warn(`[AudioRecorder] failed to stop recording ${reason}`);
-                        this.props.onRecordingStateChanged({ isRecording: false });
-                        this.lastRecordedFileName = null;
-                    });
-            }
-        }
     }
 
     public async authorizeIfNeeded(): Promise<AudioAuthorizationStatus> {
