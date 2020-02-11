@@ -178,11 +178,12 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    if (requestCode == MY_PERMISSIONS_REQUEST_RECORD_AUDIO)
+    if (requestCode == MY_PERMISSIONS_REQUEST_RECORD_AUDIO && requestPromise != null)
     {
       if (permissions.length == 0) {
         Log.i(TAG, "RNAudio: onRequestPermissionsResult : cancelled!");
         requestPromise.reject("E_ACTIVITY_CANCELLED", "User cancelled the permission request");
+        requestPromise = null;
         return;
       }
 
@@ -190,9 +191,9 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       requestPromise.resolve(permissions.length == 2 &&
           grantResults[0] == PackageManager.PERMISSION_GRANTED &&
           grantResults[1] == PackageManager.PERMISSION_GRANTED);
+      requestPromise = null;
     }
     // no longer need the promise; discard local reference
-    requestPromise = null;
   }
 
   @ReactMethod
