@@ -11,6 +11,7 @@ interface AudioRecorderManager {
     pauseRecording: () => Promise<void>;
     isRecording: () => Promise<boolean>;
     checkAuthorizationStatus: () => Promise<AudioAuthorizationStatus>;
+    activateSession: () => Promise<void>;
     requestAuthorization: () => Promise<boolean>;
     removeListeners(): void;
 }
@@ -40,6 +41,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
             .then(() => Promise.resolve())
             .catch(() => { /*  */ });
     }
+    
 
     public componentDidUpdate(prevProps: Readonly<AudioRecorderOwnProps>, prevState: Readonly<AudioRecordState>) {
         if (prevState.authStatus !== this.state.authStatus) {
@@ -127,6 +129,13 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         return authStatus;
     }
 
+    /**
+     * Do not call this function.
+     */
+    public async activateSession(): Promise<void> {
+        await this.recorder.activateSession();
+
+    }
     public release(): void {
         // this.currentAudioRecordingData = undefined;
     }

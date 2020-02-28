@@ -10,6 +10,23 @@ import Foundation
 import AVFoundation
 //import React
 
+extension Date {
+    var iso8601: String {
+        if #available(iOS 11.0, *) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter.string(from: self)
+        } else {
+            let formatter = DateFormatter()
+            formatter.calendar = Calendar(identifier: .iso8601)
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
+            return formatter.string(from: self)
+        }
+    }
+}
+
 enum AudioError : CustomNSError {
     case sessionActive(String)
     case createRecorder(String)
@@ -62,8 +79,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate let _audioSession = AVAudioSession.sharedInstance()
     
-    fileprivate var _lastAudioCategory:  AVAudioSession.Category = AVAudioSession.Category.ambient;
-    fileprivate var _lastAudioCategoryOptions:  AVAudioSession.CategoryOptions = [];
+    fileprivate let _lastAudioCategory:  AVAudioSession.Category = AVAudioSession.Category.playAndRecord;
+    fileprivate var _lastAudioCategoryOptions:  AVAudioSession.CategoryOptions = [.mixWithOthers];
     fileprivate var _audioRecorder: AVAudioRecorder? = nil
     fileprivate var _onAudioStoppedCallback: ((_ success: Bool) -> Void)? = nil
     
@@ -92,15 +109,16 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.audioSessionInterrupted), name: AVAudioSession.interruptionNotification, object: nil)
         do {
             try self._setSessionActive(active: true)
-            print("Audio Recording Session is active")
+            // self._log("Audio Recording Session is active")
         } catch let error {
-            print("[ERROR] Audio recording encode error: \(String(describing: error))")
+            self._log("[ERROR] Audio recording encode error: \(String(describing: error))")
         }
     }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
         do {
+            // self._log("deinit called. Deactivating session.")
             try self._setSessionActive(active: false)
         } catch let error {
             print("[ERROR] Audio recording encode error: \(String(describing: error))")
@@ -125,14 +143,9 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         let fileUrl = documentsPath.appendingPathComponent(filename)
         
         do {
-            // switch into record audio category to prevent the silent switch from supressing audio recording
-            if (self._audioSession.category != AVAudioSession.Category.record && self._audioSession.category != self._lastAudioCategory) {
-                self._lastAudioCategory = self._audioSession.category
-                self._lastAudioCategoryOptions = self._audioSession.categoryOptions
-            }
-
+            
             try self._audioSession.setCategory(AVAudioSession.Category.record)
-
+            
             let audioRecorder = try self._createRecorder(fileUrl: fileUrl)
             audioRecorder.prepareToRecord()
             
@@ -187,6 +200,20 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         }
     }
     
+    @objc(activateSession:rejecter:)
+    func activateSession(resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
+        // self._log("activating session manually")
+        do {
+            try self._setSessionActive(active: false)
+            try self._audioSession.setCategory(AVAudioSession.Category.record)
+            try self._setSessionActive(active: true)
+            resolver(nil)
+        } catch let error {
+            let recordError: AudioError  = error as? AudioError ?? AudioError.record("Unknown error: \(error)")
+            rejecter(nil,nil,recordError)
+        }
+    }
+    
     @objc(isRecording:rejecter:)
     func isRecording(resolver: RCTPromiseResolveBlock, rejecter: RCTPromiseRejectBlock) {
         resolver(self.recording)
@@ -220,8 +247,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate func _setSessionActive(active: Bool) throws {
         do {
-            try self._audioSession.setActive(active, options: .notifyOthersOnDeactivation)
-            print("Audio session is active: \(active), with category: \(self._audioSession.category)")
+            try self._audioSession.setActive(active)
+            // self._log("Audio session is active: \(active), with category: \(self._audioSession.category)")
         } catch let error {
             throw AudioError.sessionActive("Failed to set audio session active state to \(active). Error: \(error)")
         }
@@ -265,9 +292,9 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         if (self._audioSession.category == AVAudioSession.Category.record) {
             do {
                 try self._audioSession.setCategory(self._lastAudioCategory, options: self._lastAudioCategoryOptions)
-                print("AudioRecordManager changed category to \(self._lastAudioCategory)")
+                // self._log("AudioRecordManager changed category to \(self._lastAudioCategory)")
             } catch {
-                print("[ERROR] on audioRecorderDidFinishRecording error: \(String(describing: error))")
+                self._log("[ERROR] on audioRecorderDidFinishRecording error: \(String(describing: error))")
             }
         }
     }
@@ -275,24 +302,60 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     /* if an error occurs while encoding it will be reported to the delegate. */
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?){
-        print("[ERROR] Audio recording encode error: \(String(describing: error))")
+        // self._log("[ERROR] Audio recording encode error: \(String(describing: error))")
         //TODO:
     }
     
     @objc
     func audioSessionInterrupted(_ notification: Notification) {
+        
+        guard let userInfo = notification.userInfo,
+            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+                return
+        }
+        
+        var shouldResume = false
+        if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                shouldResume = true
+                // Interruption ended. Playback should resume.
+            }
+        }
+        var wasSuspended = false
+        if #available(iOS 10.3, *) {
+            wasSuspended = userInfo[AVAudioSessionInterruptionWasSuspendedKey] as? Bool ?? false
+        }
+        
         do {
-            let reason = (notification.userInfo![AVAudioSessionInterruptionTypeKey] as AnyObject).uintValue
-            if reason == AVAudioSession.InterruptionType.began.rawValue {
+            // Switch over the interruption type.
+            switch type {
+                
+            case .began:
+                // An interruption began. Update the UI as needed.
+                self._log("audioSessionInterrupted: InterruptionType.began. Was Suspended? \(wasSuspended). Should resume? \(shouldResume)")
                 if self.recording {
+                    //                    if (wasSuspended) {
                     self._audioRecorder?.stop()
+                    //                         self._onAudioStoppedCallback?(false);
+                    //                    }
+                    try self._setSessionActive(active: false)
                 }
-                try self._setSessionActive(active: false)
-            } else {
-                try self._setSessionActive(active: false)
+                
+            case .ended:
+                // An interruption ended. Resume playback, if appropriate.
+                self._log("audioSessionInterrupted: InterruptionType.ended. Was Suspended? \(wasSuspended). Should resume? \(shouldResume)")
+                
+            default: ()
             }
         } catch let error {
-            print("[ERROR] Audio recording interrupted error: \(String(describing: error))")
+            self._log("[ERROR] Audio recording interrupted error: \(String(describing: error))")
         }
     }
+    
+    private func _log(_ message: String) {
+        print("\(Date().iso8601) [AudioRecorderManager.swift] \(message)")
+    }
 }
+

@@ -11,6 +11,8 @@
 		030702B621C8439E000DD738 /* RNAudio-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */; };
 		030702B721C8439E000DD738 /* RNAudio.h in Sources */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; };
 		030702B821C8439E000DD738 /* NativeTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FF1EE74E1700946913 /* NativeTransport.m */; };
+		033E5CE424099A1C00EBDC00 /* Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033E5CE324099A1C00EBDC00 /* Dispatch.swift */; };
+		033E5CE524099A1C00EBDC00 /* Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033E5CE324099A1C00EBDC00 /* Dispatch.swift */; };
 		03AA340A1EE74EC000946913 /* RNAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = 03AA34081EE74EC000946913 /* RNAudio.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		03AA340E1EE74EC700946913 /* AudioRecorderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */; };
 		03E7577F1EE9F437007478FD /* NativeTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = 03AA33FF1EE74E1700946913 /* NativeTransport.m */; };
@@ -31,6 +33,7 @@
 
 /* Begin PBXFileReference section */
 		030702AC21C8436F000DD738 /* libReactNativeAudio.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libReactNativeAudio.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		033E5CE324099A1C00EBDC00 /* Dispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dispatch.swift; sourceTree = "<group>"; };
 		03AA33FB1EE74D3F00946913 /* RNAudio-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RNAudio-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
 		03AA33FC1EE74D4000946913 /* AudioRecorderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioRecorderManager.swift; sourceTree = "<group>"; };
 		03AA33FF1EE74E1700946913 /* NativeTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NativeTransport.m; sourceTree = "<group>"; };
@@ -65,6 +68,7 @@
 				03AA34081EE74EC000946913 /* RNAudio.h */,
 				03AA34091EE74EC000946913 /* Info.plist */,
 				03AA33FF1EE74E1700946913 /* NativeTransport.m */,
+				033E5CE324099A1C00EBDC00 /* Dispatch.swift */,
 			);
 			name = RNAudio;
 			sourceTree = "<group>";
@@ -163,6 +167,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 42F559B11CFC90C400DC3F84;
@@ -193,6 +198,7 @@
 			files = (
 				030702B621C8439E000DD738 /* RNAudio-Bridging-Header.h in Sources */,
 				030702B721C8439E000DD738 /* RNAudio.h in Sources */,
+				033E5CE524099A1C00EBDC00 /* Dispatch.swift in Sources */,
 				030702B821C8439E000DD738 /* NativeTransport.m in Sources */,
 				030702B521C84380000DD738 /* AudioRecorderManager.swift in Sources */,
 			);
@@ -202,6 +208,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				033E5CE424099A1C00EBDC00 /* Dispatch.swift in Sources */,
 				03E7577F1EE9F437007478FD /* NativeTransport.m in Sources */,
 				03AA340E1EE74EC700946913 /* AudioRecorderManager.swift in Sources */,
 			);

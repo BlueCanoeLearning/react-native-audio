@@ -17,5 +17,6 @@ RCT_EXTERN_METHOD(pauseRecording:(RCTPromiseResolveBlock)resolver rejecter:(RCTP
 RCT_EXTERN_METHOD(isRecording:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
 RCT_EXTERN_METHOD(requestAuthorization:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
 RCT_EXTERN_METHOD(checkAuthorizationStatus:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
+RCT_EXTERN_METHOD(activateSession:(RCTPromiseResolveBlock)resolver rejecter:(RCTPromiseRejectBlock)rejecter)
 
 @end
