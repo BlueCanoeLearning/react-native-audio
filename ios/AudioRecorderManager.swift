@@ -79,7 +79,7 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
     fileprivate let _audioSession = AVAudioSession.sharedInstance()
     
-    fileprivate let _lastAudioCategory:  AVAudioSession.Category = AVAudioSession.Category.playAndRecord;
+    fileprivate let _lastAudioCategory:  AVAudioSession.Category = AVAudioSession.Category.playback;
     fileprivate var _lastAudioCategoryOptions:  AVAudioSession.CategoryOptions = [.mixWithOthers];
     fileprivate var _audioRecorder: AVAudioRecorder? = nil
     fileprivate var _onAudioStoppedCallback: ((_ success: Bool) -> Void)? = nil
@@ -358,4 +358,3 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
         print("\(Date().iso8601) [AudioRecorderManager.swift] \(message)")
     }
 }
-
