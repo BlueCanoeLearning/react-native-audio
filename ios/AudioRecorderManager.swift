@@ -63,7 +63,7 @@ enum AudioError : CustomNSError {
 @objc(AudioRecorderManager)
 class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
     
-    fileprivate let _maxRecordingDurationSec: TimeInterval = 15.0
+    // fileprivate let _maxRecordingDurationSec: TimeInterval = 15.0
     
     fileprivate let _audioRecordSettings: [String: Any] = [
         AVFormatIDKey: NSNumber(value: Int32(kAudioFormatLinearPCM)),
@@ -150,8 +150,9 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
             self._audioRecorder = audioRecorder
             
             try self._setSessionActive(active: true)
-            
-            audioRecorder.record(forDuration: self._maxRecordingDurationSec)
+            audioRecorder.record()
+            // this doesn't work at all
+            // audioRecorder.record(forDuration: self._maxRecordingDurationSec)
             resolver(nil)
             
         } catch let error {
@@ -338,8 +339,8 @@ class AudioRecorderManager: NSObject, RCTBridgeModule, AVAudioRecorderDelegate {
                     //                    if (wasSuspended) {
                     self._audioRecorder?.stop()
                     // FIXME: this may crash
-                    self._onAudioStoppedCallback?(false);
-                    self._onAudioStoppedCallback = nil;
+                    // self._onAudioStoppedCallback?(false);
+                    // self._onAudioStoppedCallback = nil;
                     //                    }
                     try self._setSessionActive(active: false)
                 }
