@@ -44,7 +44,6 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
             .then(() => Promise.resolve())
             .catch(() => { /*  */ });
     }
-    
 
     public componentDidUpdate(prevProps: Readonly<AudioRecorderOwnProps>, prevState: Readonly<AudioRecordState>) {
         if (prevState.authStatus !== this.state.authStatus) {
@@ -155,7 +154,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         }
     }
 
-    public async start(filename?: string): Promise<string> {
+    public start = async (filename?: string) => {
         let authStatus = this.state.authStatus;
         if (authStatus === "undetermined" || !authStatus) {
             authStatus = await this.updateAuthStatus();
@@ -169,9 +168,9 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
                 await this.recorder.stopRecording();
             }
             await this.recorder.startRecording(recordedFileName);
-            const timeoutDurationSeconds = 1000 * (this.props.timeoutDurationSeconds || this.defaultRecordingTimeoutSec);
-            window.clearTimeout(this.timeoutHandler);
-            this.timeoutHandler = window.setTimeout(this.stopRecordingTimeOut, timeoutDurationSeconds);
+            const timeoutDurationSeconds = 1000 * (this.props.timeoutDurationSeconds ?? this.defaultRecordingTimeoutSec);
+            // window.clearTimeout(this.timeoutHandler);
+            this.timeoutHandler = window.setTimeout(() => { this.stopRecordingTimeOut(); }, timeoutDurationSeconds);
             return recordedFileName;
         } else {
             const error = new Error(`Microphone could not be used because permission was denied. Please allow microphone use in your device settings.`);
@@ -180,19 +179,22 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         }
     }
 
-    public async stop(): Promise<void> {
-        await this.recorder.stopRecording();
-        window.clearTimeout(this.timeoutHandler);
-        const audioBuffer = await this.extractAudioBuffer();
-        this.dispatchAudioBuffer(audioBuffer);
+    public stop = async () => {
+        const isRecording = await this.isRecording();
+        if (isRecording) {
+            await this.recorder.stopRecording();
+            window.clearTimeout(this.timeoutHandler);
+            const audioBuffer = await this.extractAudioBuffer();
+            this.dispatchAudioBuffer(audioBuffer);
+        }
     }
 
-    public async isRecording(): Promise<boolean> {
+    public isRecording = async () => {
         const isRecording = await this.recorder.isRecording();
         return isRecording;
     }
 
-    private async extractAudioBuffer(filePath?: string): Promise<Uint8Array> {
+    private extractAudioBuffer = async (filePath?: string) => {
         let uri: string;
         if (filePath) {
             uri = filePath;
@@ -220,10 +222,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
     }
 
     private stopRecordingTimeOut = () => {
-        this.isRecording().then((isRecording) => {
-            if (isRecording) {
-                return this.stop();
-            }
+        this.stop().then(() => {
             return Promise.resolve();
         })
         .catch((reason) => {
