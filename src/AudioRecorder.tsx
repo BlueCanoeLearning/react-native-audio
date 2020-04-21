@@ -68,20 +68,15 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
                     });
             } else if (this.props.recording === false) {
                 this.stop()
-                    .then(() => {
+                    .then(async ({ wasRecording }) => {
                         const fileName = this.lastRecordedFileName;
 
                         if (fileName) {
                             const fullFilePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${this.lastRecordedFileName}`;
-                            return this.extractAudioBuffer(fullFilePath);
-                        } else {
-                            return Promise.resolve(undefined);
+                            const audioBuffer = await this.extractAudioBuffer(fullFilePath);
+                            this.dispatchAudioBuffer(audioBuffer);
+
                         }
-                    }).then((audioBuffer?: Uint8Array) => {
-                        const fileName = this.lastRecordedFileName || undefined;
-                        const filePath = RNFetchBlob.fs.dirs.DocumentDir;
-                        this.props.onRecordingStateChanged({ audioBuffer, fileName, filePath, isRecording: false });
-                        this.lastRecordedFileName = null;
                     })
                     .catch((reason) => {
                         // tslint:disable-next-line:no-console
@@ -180,13 +175,13 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
     }
 
     public stop = async () => {
+        window.clearTimeout(this.timeoutHandler);
+
         const isRecording = await this.isRecording();
         if (isRecording) {
             await this.recorder.stopRecording();
-            window.clearTimeout(this.timeoutHandler);
-            const audioBuffer = await this.extractAudioBuffer();
-            this.dispatchAudioBuffer(audioBuffer);
         }
+        return { wasRecording: isRecording }
     }
 
     public isRecording = async () => {
@@ -222,7 +217,15 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
     }
 
     private stopRecordingTimeOut = () => {
-        this.stop().then(() => {
+        this.stop().then(async () => {
+            const fileName = this.lastRecordedFileName;
+
+            if (fileName) {
+                const fullFilePath = `${RNFetchBlob.fs.dirs.DocumentDir}/${this.lastRecordedFileName}`;
+                const audioBuffer = await this.extractAudioBuffer(fullFilePath);
+                this.dispatchAudioBuffer(audioBuffer);
+            }
+
             return Promise.resolve();
         })
         .catch((reason) => {
