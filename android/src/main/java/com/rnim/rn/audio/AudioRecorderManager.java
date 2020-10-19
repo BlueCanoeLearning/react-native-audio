@@ -12,6 +12,7 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableMap;
 
+import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -311,8 +312,13 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   private void rawToWave(final File rawFile, final File waveFile) throws IOException {
+    // TODO: We have a memory leak in this function
+    // currently there are *at least* large arrays created for the raw to wave conversion
+    // and a buffer that copies the data twice, resulting in 6 copies copies of the data
 
+    // total allocated here: T = rawData.length
     byte[] rawData = new byte[(int) rawFile.length()];
+
     DataInputStream input = null;
     try {
       input = new DataInputStream(new FileInputStream(rawFile));
@@ -324,29 +330,37 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
     }
 
     DataOutputStream output = null;
+    ByteBuffer byteBuffer = null;
     try {
       // Audio data (conversion big endian -> little endian)
       short[] shorts = new short[rawData.length / 2];
-        ByteBuffer
-          .wrap(rawData)
-          .order(ByteOrder.LITTLE_ENDIAN)
-          .asShortBuffer()
-          .get(shorts);
+      byteBuffer = ByteBuffer
+        .wrap(rawData)
+        .order(ByteOrder.LITTLE_ENDIAN);
+
+      // create a view buffer backed by the original byte buffer
+      // https://developer.android.com/reference/java/nio/ByteBuffer#views
+      // total allocated here: T = T + rawData.length / 2 = 1.5 * rawData.length
+      ShortBuffer shortBuffer = byteBuffer.asShortBuffer().get(shorts);
 
       // Prepare the (possibly resampled) output audio data
+      // returns a copy of the data, so the original `shorts` array is no longer necessary
+      // TODO: Possible optimization: Use one less data array by modifying `shorts` in place, instead of creating a new resampledShorts[]?
+      // total allocated here: T = T + ?? Lots of allocations depending on original record sample rate
       short[] resampledShorts = this.resampleTo16kHz(shorts);
 
-        ByteBuffer bytes = ByteBuffer
-          .allocate(resampledShorts.length * 2)
-          .order(ByteOrder.LITTLE_ENDIAN);
+      // unclear if both of these calls are necessary
+      // the new shortBuffer has a different position & capacity as the original byteBuffer, yet shares the same data
+      shortBuffer.clear();
+      byteBuffer.clear();
 
-      for (short s : resampledShorts) {
-        bytes.putShort(s);
-      }
+      // this should also fill the byte buffer
+      // TODO: Can we call wrap() here instead of copying all the data?
+      shortBuffer.put(resampledShorts);
 
       // We always resample to this rate now.
       final int sampleRate = 16000;
-      int outputSize = bytes.capacity();
+      int outputSize = byteBuffer.capacity();
 
       output = new DataOutputStream(new FileOutputStream(waveFile));
       // WAVE header
@@ -365,7 +379,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       writeString(output, "data"); // subchunk 2 id
       writeInt(output, outputSize); // subchunk 2 size
 
-      output.write(bytes.array());
+      output.write(byteBuffer.array());
     } finally {
       if (output != null) {
         output.close();
@@ -421,13 +435,18 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
       recorder = null;
       recordingThread = null;
     }
+    // probably not helpful, but attempts to invoke the GC before rawToWave() gets called
+    Runtime.getRuntime().gc();
     File f1 = getRawFile(currentFilePath);
     File f2 = getWavFile(currentFilePath);
     try {
+      // We have an out of memory error here:
       rawToWave(f1, f2);
     } catch (IOException e) {
       e.printStackTrace();
     }
+    // try to clear up all those short[] buffers created in rawToWave()
+    Runtime.getRuntime().gc();
 
     promise.resolve(f2.getAbsolutePath());
     sendEvent("recordingFinished", null);
