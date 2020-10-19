@@ -312,7 +312,7 @@ class AudioRecorderManager extends ReactContextBaseJavaModule {
   }
 
   private void rawToWave(final File rawFile, final File waveFile) throws IOException {
-    // TODO: We have a memory leak in this function
+    // TODO: We have an out of memory exception thrown this function
     // currently there are *at least* three large arrays created for the raw to wave conversion
     // and a buffer that copies the data twice, resulting in 6 copies copies of the data
 
