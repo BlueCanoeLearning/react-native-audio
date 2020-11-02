@@ -41,6 +41,7 @@
     "react-native": "0.61.5",
     "react-native-fetch-blob": "https://github.com/BlueCanoeLearning/react-native-fetch-blob#bluecanoe",
     "tslib": "^1.9.3",
+    "tslint": "^6.1.3",
     "typescript": "^3.7.3"
   },
   "dependencies": {},

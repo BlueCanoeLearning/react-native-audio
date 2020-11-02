@@ -181,7 +181,7 @@ export default class AudioRecorder extends React.PureComponent<AudioRecorderOwnP
         if (isRecording) {
             await this.recorder.stopRecording();
         }
-        return { wasRecording: isRecording }
+        return { wasRecording: isRecording };
     }
 
     public isRecording = async () => {
